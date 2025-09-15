@@ -51,22 +51,6 @@ The **ProDev Backend track** equips learners with practical backend development 
 
 ---
 
-## 🤝 Collaboration – Key to Success
-
-### Collaborators
-
-* **Fellow ProDev Backend Learners** – Idea exchange, study groups, and debugging support.
-* **ProDev Frontend Learners** – Consuming backend APIs to complete frontend projects.
-
-### Where We Collaborate
-
-* **Discord Channel:** `#ProDevProjectNexus`
-
-  * Share progress and ideas
-  * Ask/answer technical questions
-  * Sync with FE learners on API requirements
-
-
 ## 🏗 Case Study: Job Board Backend
 
 ### 🎯 Project Goals
