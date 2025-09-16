@@ -1,11 +1,11 @@
 from django.shortcuts import render, redirect
 from django.views import View
-from .forms import SignupForm, LoginForm, passwordResetRequestForm
+from .forms import SignupForm, LoginForm, passwordResetRequestForm, setNewPasswordForm
 from django.contrib import messages
 from django.contrib.auth.models import User
 from django.contrib.auth.tokens import default_token_generator
 from django.contrib.auth import get_user_model
-from django.utils.http import urlsafe_base64_encode,force_bytes, force_str
+from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode,force_bytes, force_str
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, method_decorator
 from django.core.mail import send_mail
@@ -87,6 +87,43 @@ class PasswordResetView(View):
                 messages.error(request, 'No user found with this email address.')
 
                 return redirect('templates/login')
+            
+# New Password view
+class SetNewPasswordView(View):
+    def get(self, request, uidb64, token):
+        form = setNewPasswordForm()
+        return render(request, 'templates/set_new_password.html', {'form': form, 'uidb64': uidb64, 'token': token, 'validlink': True})
+
+    def post(self, request, uidb64, token):
+        try:
+            uid = force_str(urlsafe_base64_decode(uidb64))
+            user = User.objects.get(pk=uid)
+        except (TypeError, ValueError, OverflowError, User.DoesNotExist):
+            user = None
+
+        if user is not None and default_token_generator.check_token(user, token):
+            form = setNewPasswordForm(request.POST)
+            if form.is_valid():
+                password = form.cleaned_data['new_password']
+                confirm_password = form.cleaned_data['confirm_password']
+
+                if password != confirm_password:
+                    messages.error(request, 'Passwords do not match.')
+                    return render(request, 'templates/set_new_password.html', {'form': form, 'uidb64': uidb64, 'token': token, 'validlink': True})
+
+                user.set_password(password)
+                user.save()
+                messages.success(request, 'Password has been reset successfully. Please log in.')
+                return redirect('templates/login') 
+
+            # Form is invalid
+            return render(request, 'templates/set_new_password.html', {'form': form, 'uidb64': uidb64, 'token': token, 'validlink': True})
+
+        # Invalid token or user
+        messages.error(request, 'Invalid or expired token.')
+        return render(request, 'templates/set_new_password.html', {'form': setNewPasswordForm(), 'validlink': False})
+         
+
 
 
 # Profile view
