@@ -7,6 +7,7 @@ from .views import (
     PasswordResetRequestAPIView,
     SetNewPasswordAPIView,
     ProfileAPIView,
+    UserFileAPIView,
     users_home,
 )
 
@@ -32,4 +33,8 @@ urlpatterns = [
     ),
     # Profile (requires login)
     path("profile/", ProfileAPIView.as_view(), name="api-profile"),
+    # UserFile endpoints
+    path('files/', UserFileAPIView.as_view(), name='api-user-files'),
+    path('files/<int:file_id>/', UserFileAPIView.as_view(), name='api-user-file-detail')
+
 ]
