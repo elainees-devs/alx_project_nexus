@@ -15,13 +15,13 @@ User = get_user_model()
 # Signup view
 class SignupView(View):
     def get(self, request):
-        return render(request, 'templates/signup.html', {'form': 'form'})
+        form = SignupForm()
+        return render(request, 'templates/signup.html', {'form': form})
 
     def post(self, request):
-        # Handle user signup logic
-        form=SignupForm(request.POST)
+        form = SignupForm(request.POST)
         if form.is_valid():
-            user=form.save(commit=False)
+            user = form.save(commit=False)
             user.set_password(form.cleaned_data['password'])
             user.save()
             messages.success(request, 'Account created successfully. Please log in.')
