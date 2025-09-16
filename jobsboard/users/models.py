@@ -17,7 +17,6 @@ def assign_group_based_on_role(sender, instance, created, **kwargs):
         elif instance.role == instance.ROLE_ADMIN:
             group, _ = Group.objects.get_or_create(name='Administrators')
             instance.groups.add(group)
-        # No need to call instance.save() here, adding to ManyToManyField is enough
 
 # Custom user manager
 class CustomUserManager(BaseUserManager):
@@ -42,7 +41,6 @@ class CustomUserManager(BaseUserManager):
             raise ValueError('Superuser must have is_superuser=True.')
 
         return self.create_user(username, email, password, **extra_fields)
-    
 
 # Custom user model
 class User(AbstractUser):
@@ -62,6 +60,9 @@ class User(AbstractUser):
         default=ROLE_SEEKER,
     )
 
+    middle_name = models.CharField(max_length=30, blank=True, null=True)
+    last_login_ip = models.GenericIPAddressField(null=True, blank=True)
+
     objects = CustomUserManager()
 
     USERNAME_FIELD = 'username'
@@ -69,7 +70,7 @@ class User(AbstractUser):
 
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
-    
+
     # Role check methods
     @property
     def is_seeker(self): 
