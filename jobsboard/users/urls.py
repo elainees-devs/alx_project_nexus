@@ -1,29 +1,35 @@
+# jobsboard/users/urls.py
 from django.urls import path
 from .views import (
-    SignupView,
-    LoginView,
-    LogoutView,
-    PasswordResetView,
-    SetNewPasswordView,
-    ProfileView
+    SignUpAPIView,
+    LoginAPIView,
+    LogoutAPIView,
+    PasswordResetRequestAPIView,
+    SetNewPasswordAPIView,
+    ProfileAPIView,
+    users_home,
 )
 
 urlpatterns = [
+    path("", users_home, name="api-users-home"),
     # Signup
-    path('signup/', SignupView.as_view(), name='signup'),
-
+    path("signup/", SignUpAPIView.as_view(), name="api-signup"),
     # Login
-    path('login/', LoginView.as_view(), name='login'),
-
+    path("login/", LoginAPIView.as_view(), name="api-login"),
     # Logout
-    path('logout/', LogoutView.as_view(), name='logout'),
-
+    path("logout/", LogoutAPIView.as_view(), name="api-logout"),
     # Password reset request
-    path('password-reset/', PasswordResetView.as_view(), name='password_reset'),
-
+    path(
+        "password-reset/",
+        PasswordResetRequestAPIView.as_view(),
+        name="api-password-reset",
+    ),
     # Set new password (link from email)
-    path('reset/<uidb64>/<token>/', SetNewPasswordView.as_view(), name='set_new_password'),
-
+    path(
+        "reset/<uidb64>/<token>/",
+        SetNewPasswordAPIView.as_view(),
+        name="api-set-new-password",
+    ),
     # Profile (requires login)
-    path('profile/', ProfileView.as_view(), name='profile'),
+    path("profile/", ProfileAPIView.as_view(), name="api-profile"),
 ]
