@@ -1,7 +1,7 @@
 # jobsboard/users/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model, authenticate
-from .models import Profile
+from .models import Profile, UserFile
 
 User = get_user_model()
 
@@ -12,6 +12,16 @@ class ProfileSerializer(serializers.ModelSerializer):
         model = Profile
         fields = ['id', 'bio', 'location', 'birth_date', 'profile_image']
         read_only_fields = ['id']
+
+
+# ----------------------------
+# UserFile Serializer
+# ----------------------------
+class UserFileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserFile
+        fields = ['id', 'file_type', 'file', 'uploaded_at']
+        read_only_fields = ['id', 'uploaded_at']
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -25,14 +35,12 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class SignUpSerializer(serializers.ModelSerializer):
-    """Serializer for user sign-up."""
     password = serializers.CharField(write_only=True, min_length=8)
     confirm_password = serializers.CharField(write_only=True, min_length=8)
-    profile = ProfileSerializer(read_only=True)  # include profile in signup response
 
     class Meta:
         model = User
-        fields = ['username', 'email', 'password', 'confirm_password', 'first_name', 'middle_name', 'last_name', 'role', 'profile']
+        fields = ['username', 'email', 'password', 'confirm_password', 'first_name', 'middle_name', 'last_name', 'role']
 
     def validate(self, data):
         if data['password'] != data['confirm_password']:
@@ -44,8 +52,9 @@ class SignUpSerializer(serializers.ModelSerializer):
         password = validated_data.pop('password')
         user = User(**validated_data)
         user.set_password(password)
-        user.save()  # Profile will be created automatically via signal
+        user.save()
         return user
+
 
 
 class LoginSerializer(serializers.Serializer):
