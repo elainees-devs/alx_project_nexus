@@ -1,5 +1,6 @@
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from rest_framework.parsers import MultiPartParser, FormParser
 from rest_framework import status, permissions
 from django.contrib.auth import login, logout
 from django.contrib.auth.tokens import default_token_generator
@@ -8,7 +9,9 @@ from django.http import HttpResponse, JsonResponse
 from django.utils.encoding import force_bytes, force_str
 from django.core.mail import send_mail
 from django.contrib.auth import get_user_model
+from .models import UserFile
 from .serializers import (
+    UserFileSerializer,
     SignUpSerializer,
     LoginSerializer,
     PasswordResetRequestSerializer,
@@ -34,6 +37,36 @@ def users_home(request):
             "profile": "/api/users/profile/"
         }
     })
+
+
+# ---------------- UserFile API ----------------
+class UserFileAPIView(APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser]  # Handle file uploads
+
+    def get(self, request):
+        """List all files of the authenticated user"""
+        user_files = UserFile.objects.filter(user=request.user)
+        serializer = UserFileSerializer(user_files, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        """Upload a new file"""
+        serializer = UserFileSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, file_id):
+        try:
+            user_file = UserFile.objects.get(id=file_id, user=request.user)
+            user_file.delete()
+            return Response({"detail": "File deleted successfully."}, status=status.HTTP_204_NO_CONTENT)
+        except UserFile.DoesNotExist:
+            return Response({"error": "File not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        
 
 # ---------------- Signup API ----------------
 class SignUpAPIView(APIView):
