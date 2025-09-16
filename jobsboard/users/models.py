@@ -1,11 +1,8 @@
-from django.contrib.auth.models import Group, AbstractUser, BaseUserManager, Permission
+from django.contrib.auth.models import AbstractUser, BaseUserManager, Group, Permission
 from django.db import models
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.conf import settings
-import logging
-
-logger = logging.getLogger(__name__)
 
 # ----------------------------
 # Custom user manager
@@ -25,10 +22,6 @@ class CustomUserManager(BaseUserManager):
     def create_superuser(self, username, email, password=None, **extra_fields):
         extra_fields.setdefault('is_staff', True)
         extra_fields.setdefault('is_superuser', True)
-        if extra_fields.get('is_staff') is not True:
-            raise ValueError('Superuser must have is_staff=True.')
-        if extra_fields.get('is_superuser') is not True:
-            raise ValueError('Superuser must have is_superuser=True.')
         return self.create_user(username, email, password, **extra_fields)
 
 
@@ -47,7 +40,7 @@ class User(AbstractUser):
     ]
 
     ROLE_PERMISSIONS = {
-        'Job Seeker': ['view_user'],  # custom permissions only
+        'Job Seeker': ['view_user'],
         'Recruiter': ['change_user_role'],
         'Administrator': ['change_user_role', 'deactivate_user'],
     }
@@ -62,7 +55,7 @@ class User(AbstractUser):
     REQUIRED_FIELDS = ['email']
 
     class Meta:
-        # Only custom permissions; built-in add/view/change/delete are automatic
+        app_label = 'users'  # critical for Django to recognize app
         permissions = [
             ('change_user_role', 'Can Change User Role'),
             ('deactivate_user', 'Can Deactivate User'),
@@ -71,7 +64,6 @@ class User(AbstractUser):
     def __str__(self):
         return f"{self.username} ({self.get_role_display()})"
 
-    # Role check properties
     @property
     def is_seeker(self):
         return self.role == self.ROLE_SEEKER
@@ -103,7 +95,6 @@ def assign_group_and_permissions(sender, instance, created, **kwargs):
         return
 
     group, _ = Group.objects.get_or_create(name=group_name)
-
     role_name = dict(instance.ROLE_CHOICES).get(instance.role)
     if role_name:
         perm_codenames = instance.ROLE_PERMISSIONS.get(role_name, [])
@@ -111,6 +102,32 @@ def assign_group_and_permissions(sender, instance, created, **kwargs):
         group.permissions.add(*perms)
 
     instance.groups.add(group)
+
+
+# ----------------------------
+# UserFile model
+# ----------------------------
+class UserFile(models.Model):
+    FILE_TYPES = [
+        ('profile_image', 'Profile Image'),
+        ('resume', 'Resume'),
+        ('cv', 'CV'),
+    ]
+
+    user = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name='files'
+    )
+    file_type = models.CharField(max_length=50, choices=FILE_TYPES)
+    file = models.FileField(upload_to='user_files/')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        app_label = 'users'
+
+    def __str__(self):
+        return f"{self.user.username} - {self.file_type}"
 
 
 # ----------------------------
@@ -125,6 +142,9 @@ class Profile(models.Model):
         upload_to='profile_images/', null=True, blank=True,
         help_text="Requires Pillow library: pip install Pillow"
     )
+
+    class Meta:
+        app_label = 'users'
 
     def __str__(self):
         return f"{self.user.username}'s Profile"
