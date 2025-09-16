@@ -8,7 +8,7 @@ from django.contrib.auth.decorators import login_required
 # Signup view
 class SignupView(View):
     def get(self, request):
-        return render(request, 'template/signup.html', {'form': 'form'})
+        return render(request, 'templates/signup.html', {'form': 'form'})
 
     def post(self, request):
         # Handle user signup logic
@@ -19,14 +19,14 @@ class SignupView(View):
             user.save()
             messages.success(request, 'Account created successfully. Please log in.')
             return redirect('login')
-        return render(request, 'template/signup.html', {'form': form})
+        return render(request, 'templates/signup.html', {'form': form})
        
         
 # Login view
 class LoginView(View):
     def get(self, request):
         form=LoginForm()
-        return render(request, 'template/login.html', {'form': form})
+        return render(request, 'templates/login.html', {'form': form})
 
     def post(self, request):
         # Handle user login logic
@@ -37,12 +37,19 @@ class LoginView(View):
         if user is not None:
             login(request, user)
             messages.success(request, 'Logged in successfully.')
-            return redirect('template/profile')
+            return redirect('templates/profile')
         else:
             messages.error(request, 'Invalid username or password.')
-            return render(request, 'template/login.html', {'form': form})
+            return render(request, 'templates/login.html', {'form': form})
+
 
 # Logout view
+class LogoutView(View):
+    def get(self, request):
+        logout(request)
+        messages.success(request, 'Logged out successfully.')
+        return redirect('templates/login')
+
 
 # Profile view
 
