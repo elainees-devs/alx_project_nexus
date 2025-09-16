@@ -124,11 +124,10 @@ class SetNewPasswordView(View):
         return render(request, 'templates/set_new_password.html', {'form': setNewPasswordForm(), 'validlink': False})
          
 
-
-
 # Profile view
 @method_decorator(login_required, name='dispatch')
 class ProfileView(View):
     def get(self, request):
-        return render(request, 'templates/profile.html', {'user': request.user})
+        context = {'user': request.user}
+        return render(request, 'templates/profile.html', {'user': request.user}, context)
 
