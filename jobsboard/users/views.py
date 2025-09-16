@@ -3,7 +3,7 @@ from django.views import View
 from .forms import SignupForm, LoginForm
 from django.contrib import messages
 from django.contrib.auth import authenticate, login, logout
-from django.contrib.auth.decorators import login_required
+from django.contrib.auth.decorators import login_required, method_decorator
 
 # Signup view
 class SignupView(View):
@@ -52,4 +52,8 @@ class LogoutView(View):
 
 
 # Profile view
+@method_decorator(login_required, name='dispatch')
+class ProfileView(View):
+    def get(self, request):
+        return render(request, 'templates/profile.html', {'user': request.user})
 
