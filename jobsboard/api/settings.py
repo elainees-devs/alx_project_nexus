@@ -1,5 +1,7 @@
 import environ
 from pathlib import Path
+import os
+from datetime import timedelta
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -22,6 +24,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'rest_framework',
     'users',
     'jobs',
     'applications',
@@ -29,8 +32,19 @@ INSTALLED_APPS = [
     'security',
     'companies',
     'logs',
-    'rest_framework',
+   
 ]
+
+# REST Framework settings
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+}
 
 AUTH_USER_MODEL = 'users.User'
 
@@ -92,18 +106,24 @@ AUTH_PASSWORD_VALIDATORS = [
 
 
 # HTTPS Security settings
-SECURE_SSL_REDIRECT = env("SECURE_SSL_REDIRECT", default=False)
-SECURE_HSTS_SECONDS = env("SECURE_HSTS_SECONDS", default=31536000)  # 1 year
-SECURE_HSTS_INCLUDE_SUBDOMAINS = env("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=True)
-SECURE_HSTS_PRELOAD = env("SECURE_HSTS_PRELOAD", default=True)
+SECURE_SSL_REDIRECT=env("SECURE_SSL_REDIRECT", default=False)
+SECURE_HSTS_SECONDS=env("SECURE_HSTS_SECONDS", default=31536000)  # 1 year
+SECURE_HSTS_INCLUDE_SUBDOMAINS=env("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=True)
+SECURE_HSTS_PRELOAD=env("SECURE_HSTS_PRELOAD", default=True)
 
 # Secure cookies
-SESSION_COOKIE_SECURE = True
-CSRF_COOKIE_SECURE = True
-SESSION_COOKIE_HTTPONLY = True
-CSRF_COOKIE_HTTPONLY = False  # keep False unless you never use AJAX forms
+# Secure cookies 
+SESSION_COOKIE_SECURE=env("SESSION_COOKIE_SECURE", default=False)
+CSRF_COOKIE_SECURE=env("CSRF_COOKIE_SECURE", default=False)
+SESSION_COOKIE_HTTPONLY=env("SESSION_COOKIE_HTTPONLY", default=True)
+CSRF_COOKIE_HTTPONLY=env("CSRF_COOKIE_HTTPONLY", default=False)  # keep False unless you never use AJAX forms
 
-
+# CORS settings (if you're building an API)
+CORS_ALLOW_ALL_ORIGINS=env('CORS_ALLOW_ALL_ORIGINS', default=False)
+CORS_ALLOWED_ORIGINS=[
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+]
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
