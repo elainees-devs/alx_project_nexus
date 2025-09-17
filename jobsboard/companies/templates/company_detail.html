@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2>{{ company.name }}</h2>
+    <hr>
+
+    <!-- Company Logo -->
+    {% if company.logo %}
+        <div class="mb-3">
+            <img src="{{ company.logo.url }}" alt="{{ company.name }} logo" class="img-fluid" style="max-height: 200px;">
+        </div>
+    {% endif %}
+
+    <!-- Company Info -->
+    <p><strong>Description:</strong> {{ company.description }}</p>
+    <p><strong>Website:</strong> 
+        {% if company.website %}
+            <a href="{{ company.website }}" target="_blank">{{ company.website }}</a>
+        {% else %}
+            N/A
+        {% endif %}
+    </p>
+    <p><strong>Location:</strong> {{ company.location }}</p>
+    <p><strong>Industry:</strong> {{ company.industry.name }}</p>
+    <p><strong>Owner:</strong> {{ company.owner.username }}</p>
+    <p><strong>Created At:</strong> {{ company.created_at|date:"F d, Y H:i" }}</p>
+    <p><strong>Updated At:</strong> {{ company.updated_at|date:"F d, Y H:i" }}</p>
+
+    <!-- Back Button -->
+    <a href="{% url 'company_list' %}" class="btn btn-secondary mt-3">Back to Companies</a>
+</div>
+{% endblock %}
