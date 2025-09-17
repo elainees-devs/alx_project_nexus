@@ -45,17 +45,16 @@ class UserFileAPIView(APIView):
     parser_classes = [MultiPartParser, FormParser]  # Handle file uploads
 
     def get(self, request):
-        """List all files of the authenticated user"""
         user_files = UserFile.objects.filter(user=request.user)
         serializer = UserFileSerializer(user_files, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
     def post(self, request):
-        """Upload a new file"""
         serializer = UserFileSerializer(data=request.data)
         if serializer.is_valid():
+            # Call the serializer-level validation for file type/size
             serializer.save(user=request.user)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, file_id):
@@ -66,7 +65,6 @@ class UserFileAPIView(APIView):
         except UserFile.DoesNotExist:
             return Response({"error": "File not found."}, status=status.HTTP_404_NOT_FOUND)
 
-        
 
 # ---------------- Signup API ----------------
 class SignUpAPIView(APIView):
