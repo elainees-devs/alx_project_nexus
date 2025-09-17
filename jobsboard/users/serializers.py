@@ -23,10 +23,21 @@ class UserFileSerializer(serializers.ModelSerializer):
         fields = ['id', 'file_type', 'file', 'uploaded_at']
         read_only_fields = ['id', 'uploaded_at']
 
+    def validate(self, attrs):
+        file_type = attrs.get("file_type")
+        file = attrs.get("file")
+
+        # Use FILE_VALIDATORS from the model
+        validators = UserFile.FILE_VALIDATORS.get(file_type)
+        if validators:
+            for validator in validators:
+                validator(file)  # raise ValidationError if invalid
+
+        return attrs
 
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model."""
-    profile = ProfileSerializer(read_only=True)  # include profile in user serializer
+    profile = ProfileSerializer(read_only=True)
 
     class Meta:
         model = User
