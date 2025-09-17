@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from .models import Industry, Company
 
-class IndustrySerializer:
+class IndustrySerializer(serializers.ModelSerializer):
     """Serializer for Industry model."""
    
 
