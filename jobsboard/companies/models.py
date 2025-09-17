@@ -1,11 +1,13 @@
 from django.db import models
 from django.conf import settings
+from django.core.validators import URLValidator, MinLengthValidator
 
 
 class Industry(models.Model):
     name = models.CharField(max_length=100)
 
     class Meta:
+        app_label = 'companies'
         verbose_name_plural = "Industries"
 
     def __str__(self):
@@ -13,18 +15,46 @@ class Industry(models.Model):
     
 
 class Company(models.Model):
-    name = models.CharField(max_length=255)
-    description = models.TextField()
+    name = models.CharField(
+        max_length=255,
+        validators=[
+            MinLengthValidator(2, message="Company name must be at least 2 characters long.")
+        ]
+    )
+    description = models.TextField(
+        validators=[
+            MinLengthValidator(10, message="Description must be at least 10 characters.")
+        ]
+    )
     logo = models.ImageField(upload_to='company_logos/', blank=False)
-    website = models.URLField(blank=True, null=True)
-    industry = models.ForeignKey(Industry, on_delete=models.CASCADE,related_name='companies')
-    location = models.CharField(max_length=255, blank=False)
+    website = models.URLField(
+        blank=True, 
+        null=True,
+        validators=[URLValidator(message="Enter a valid website URL.")]
+    )
+    industry = models.ForeignKey(
+        Industry, 
+        on_delete=models.CASCADE, 
+        related_name='companies'
+    )
+    location = models.CharField(
+        max_length=255,
+        validators=[
+            MinLengthValidator(2, message="Location must be at least 8 characters.")
+        ]
+    )
     owner = models.ForeignKey(
         settings.AUTH_USER_MODEL, 
-        on_delete=models.CASCADE
+        on_delete=models.CASCADE,
+        related_name='companies'
     )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        app_label = 'companies'
+        verbose_name_plural = 'Companies'
+        ordering = ['name']
 
     def __str__(self):
         return self.name
