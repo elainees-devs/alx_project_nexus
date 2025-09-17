@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'drf_yasg', # for swagger
     'users',
     'jobs',
     'applications',
@@ -50,7 +51,9 @@ AUTH_USER_MODEL = 'users.User'
 
 LOGIN_REDIRECT_URL = 'profile'   # where to go after login
 LOGOUT_REDIRECT_URL = 'login'
-LOGIN_URL = 'login'
+LOGIN_URL = '/admin/login/'
+LOGOUT_URL = '/admin/logout/'
+
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
