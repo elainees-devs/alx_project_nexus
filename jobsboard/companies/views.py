@@ -20,7 +20,7 @@ class IndustryAPIView(APIView):
     
     def put(self, request, pk):
         try:
-            industry = Industry.objects.get(pk=pk)
+            industry = Industry.objects.get(pk=None)
         except Industry.DoesNotExist:
             return Response({"error": "Industry not found"}, status=404)
         
@@ -32,7 +32,7 @@ class IndustryAPIView(APIView):
     
     def delete(self, request, pk):
         try:
-            industry = Industry.objects.get(pk=pk)
+            industry = Industry.objects.get(pk=None)
         except Industry.DoesNotExist:
             return Response({"error": "Industry not found"}, status=404)
         
@@ -57,7 +57,7 @@ class CompanyAPIVIEW(APIView):
     
     def put(self, request, pk):
         try:
-            company = Company.objects.get(pk=pk)
+            company = Company.objects.get(pk=None)
         except Company.DoesNotExist:
             return Response({"error": "Company not found"}, status=404)
         
@@ -69,7 +69,7 @@ class CompanyAPIVIEW(APIView):
     
     def delete(self, request, pk):
         try:
-            company = Company.objects.get(pk=pk)
+            company = Company.objects.get(pk=None)
         except Company.DoesNotExist:
             return Response({"error": "Company not found"}, status=404)
         
