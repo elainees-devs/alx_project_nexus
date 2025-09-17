@@ -5,6 +5,7 @@ from .models import User, UserFile, Profile
 # ----------------------------
 # Custom User Admin
 # ----------------------------
+@admin.register(User)
 class UserAdmin(BaseUserAdmin):
     model = User
     list_display = ('username', 'email', 'role', 'is_staff', 'is_superuser', 'is_active')
@@ -25,8 +26,15 @@ class UserAdmin(BaseUserAdmin):
     )
 
 # ----------------------------
-# Register models in admin
+# Register other models
 # ----------------------------
-admin.site.register(User, UserAdmin)
-admin.site.register(UserFile)
-admin.site.register(Profile)
+@admin.register(UserFile)
+class UserFileAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'file_type', 'uploaded_at')
+    list_filter = ('file_type', 'uploaded_at')
+    search_fields = ('user__username', 'file_type')
+
+@admin.register(Profile)
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ('id', 'user', 'bio', 'location', 'birth_date')
+    search_fields = ('user__username', 'bio', 'location')
