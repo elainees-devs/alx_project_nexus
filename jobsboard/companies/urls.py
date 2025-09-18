@@ -1,10 +1,12 @@
 # jobsboard/companies/urls.py
-from django.urls import path
-from .views import IndustryAPIView, CompanyAPIView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import IndustryViewSet, CompanyViewSet
+
+router = DefaultRouter()
+router.register(r'companies', CompanyViewSet, basename='company')
+router.register(r'industries', IndustryViewSet, basename='industry')
 
 urlpatterns = [
-    path("", CompanyAPIView.as_view(), name="company_list"),
-    path("<int:pk>/", CompanyAPIView.as_view(), name="company_detail"),
-    path("industries/", IndustryAPIView.as_view(), name="industry_list"),
-    path("industries/<int:pk>/", IndustryAPIView.as_view(), name="industry_detail"),
+    path("", include(router.urls)),
 ]
