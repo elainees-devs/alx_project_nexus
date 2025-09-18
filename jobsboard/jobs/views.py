@@ -1,84 +1,102 @@
-# jobsboard/jobs/views.py
-from rest_framework.views import APIView
-from rest_framework.response import Response
-from rest_framework import status
-from django.shortcuts import get_object_or_404
+#jobsboard/jobs/views.py
+from rest_framework import viewsets, permissions
+from drf_yasg.utils import swagger_auto_schema
 from .models import Skill, Job, JobSkill
 from .serializers import SkillSerializer, JobSerializer, JobSkillSerializer
 
 
-class SkillAPIView(APIView):
-    def get(self, request):
-        skills = Skill.objects.all()
-        serializer = SkillSerializer(skills, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = SkillSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def put(self, request, pk):
-        skill = get_object_or_404(Skill, pk=pk)
-        serializer = SkillSerializer(skill, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
-        skill = get_object_or_404(Skill, pk=pk)
-        skill.delete()
-        return Response({"message": "Skill deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-
-
-class JobAPIView(APIView):
-    def get(self, request):
-        jobs = Job.objects.all()
-        serializer = JobSerializer(jobs, many=True)
-        return Response(serializer.data)
-
-    def post(self, request):
-        serializer = JobSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def put(self, request, pk):
-        job = get_object_or_404(Job, pk=pk)
-        serializer = JobSerializer(job, data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_200_OK)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-    def delete(self, request, pk):
-        job = get_object_or_404(Job, pk=pk)
-        job.delete()
-        return Response({"message": "Job deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
-
-
-class JobSkillAPIView(APIView):
+# -----------------------------
+# Skill ViewSet
+# -----------------------------
+class SkillViewSet(viewsets.ModelViewSet):
     """
-    API view for creating, listing, and deleting JobSkill relationships.
+    API endpoint for managing skills.
     """
+    queryset = Skill.objects.all()
+    serializer_class = SkillSerializer
 
-    def get(self, request):
-        job_skills = JobSkill.objects.all()
-        serializer = JobSkillSerializer(job_skills, many=True)
-        return Response(serializer.data)
+    # Public GET, others require authentication
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 
-    def post(self, request):
-        serializer = JobSkillSerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
-    def delete(self, request, pk):
-        job_skill = get_object_or_404(JobSkill, pk=pk)
-        job_skill.delete()
-        return Response({"message": "JobSkill deleted successfully"}, status=status.HTTP_204_NO_CONTENT)
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
+
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+
+
+# -----------------------------
+# Job ViewSet
+# -----------------------------
+class JobViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for managing jobs.
+    """
+    queryset = Job.objects.all()
+    serializer_class = JobSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
+
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
+
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
+
+
+# -----------------------------
+# JobSkill ViewSet
+# -----------------------------
+class JobSkillViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for Job-Skill relationships.
+    """
+    queryset = JobSkill.objects.all()
+    serializer_class = JobSkillSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
+
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
+
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
