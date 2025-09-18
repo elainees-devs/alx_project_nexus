@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     'security',
     'companies',
     'logs',
+    'django_celery_results'
    
 ]
 
@@ -141,6 +142,35 @@ CORS_ALLOWED_ORIGINS=[
     "http://localhost:3000",
     "http://127.0.0.1:3000",
 ]
+
+# -----------------------
+# Email settings
+# -----------------------
+EMAIL_BACKEND = env("EMAIL_BACKEND").strip()
+EMAIL_HOST = env("EMAIL_HOST").strip()
+EMAIL_PORT = env.int("EMAIL_PORT")
+EMAIL_USE_TLS = env.bool("EMAIL_USE_TLS")
+EMAIL_HOST_USER = env("EMAIL_HOST_USER").strip()
+EMAIL_HOST_PASSWORD = env("EMAIL_HOST_PASSWORD").strip()
+DEFAULT_FROM_EMAIL = env("DEFAULT_FROM_EMAIL").strip()
+
+# -----------------------
+# Celery
+# -----------------------
+CELERY_BROKER_URL = env.str("CELERY_BROKER_URL",default="redis://localhost:6379/0")
+CELERY_RESULT_BACKEND = env("CELERY_RESULT_BACKEND")
+CELERY_ACCEPT_CONTENT = ["json"]
+CELERY_TASK_SERIALIZER = "json"
+CELERY_RESULT_SERIALIZER = "json"
+CELERY_TIMEZONE = "Africa/Nairobi"
+
+
+# Optional: retry configuration
+CELERY_TASK_ACKS_LATE = True
+CELERY_WORKER_PREFETCH_MULTIPLIER = 1
+
+# Chapa Secret key
+CHAPA_SECRET_KEY = env("CHAPA_SECRET_KEY")
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
