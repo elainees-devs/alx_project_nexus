@@ -1,17 +1,13 @@
 # jobsboard/jobs/urls.py
-from django.urls import path
-from .views import SkillAPIView, JobAPIView, JobSkillAPIView
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from .views import SkillViewSet, JobViewSet, JobSkillViewSet
+
+router = DefaultRouter()
+router.register(r'skills', SkillViewSet, basename='skill')
+router.register(r'jobs', JobViewSet, basename='job')
+router.register(r'job-skills', JobSkillViewSet, basename='jobskill')
 
 urlpatterns = [
-    # Skill endpoints
-    path('skills/', SkillAPIView.as_view(), name='skill-list'),
-    path('skills/<int:pk>/', SkillAPIView.as_view(), name='skill-detail'),
-
-    # Job endpoints
-    path('jobs/', JobAPIView.as_view(), name='job-list'),
-    path('jobs/<int:pk>/', JobAPIView.as_view(), name='job-detail'),
-
-    # JobSkill endpoints
-    path('job-skills/', JobSkillAPIView.as_view(), name='jobskill-list'),
-    path('job-skills/<int:pk>/', JobSkillAPIView.as_view(), name='jobskill-detail'),
+    path("", include(router.urls)),
 ]
