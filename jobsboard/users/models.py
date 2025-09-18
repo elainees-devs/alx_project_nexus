@@ -1,3 +1,4 @@
+#jobsboard/users/models.py
 from django.contrib.auth.models import AbstractUser, BaseUserManager, Group, Permission
 from django.db import models
 from django.db.models.signals import post_save
@@ -12,11 +13,12 @@ from PIL import Image
 # ----------------------------
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
-        if not username:
-            raise ValueError('The Username field must be set')
-        if not email:
-            raise ValueError('The Email field must be set')
-        email = self.normalize_email(email)
+        if extra_fields.get('role') == User.ROLE_ADMIN:
+            extra_fields['is_staff'] = True
+        if username == 'admin':  # only developer gets full superuser
+            extra_fields['is_superuser'] = True
+        
+
         user = self.model(username=username, email=email, **extra_fields)
         user.set_password(password)
         user.save(using=self._db)
@@ -135,7 +137,7 @@ class UserFile(models.Model):
         validators = self.FILE_VALIDATORS.get(self.file_type)
         if validators:
             self.file.field.validators = validators
-            self.full_clean() # enforce validation before saving
+            self.full_clean()
         super().save(*args, **kwargs)
 
     def __str__(self):
