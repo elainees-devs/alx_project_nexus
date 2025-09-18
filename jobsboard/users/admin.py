@@ -1,10 +1,9 @@
+#jobboard/users/admin.py
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.db.models import Q  # <--- import Q here
 from .models import User, UserFile, Profile
 
-# ----------------------------
-# Custom User Admin
-# ----------------------------
 @admin.register(User)
 class UserAdmin(BaseUserAdmin):
     model = User
@@ -12,6 +11,13 @@ class UserAdmin(BaseUserAdmin):
     list_filter = ('role', 'is_staff', 'is_superuser', 'is_active')
     search_fields = ('username', 'email')
     ordering = ('username',)
+
+    # Show all users, not just staff
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        # include all users who are staff or role=ADMIN
+        return qs.filter(Q(is_staff=True) | Q(role=User.ROLE_ADMIN))
+
     fieldsets = (
         (None, {'fields': ('username', 'email', 'password')}),
         ('Personal Info', {'fields': ('first_name', 'middle_name', 'last_name', 'last_login_ip')}),
@@ -24,17 +30,3 @@ class UserAdmin(BaseUserAdmin):
             'fields': ('username', 'email', 'password1', 'password2', 'role', 'is_active', 'is_staff', 'is_superuser')}
         ),
     )
-
-# ----------------------------
-# Register other models
-# ----------------------------
-@admin.register(UserFile)
-class UserFileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'file_type', 'uploaded_at')
-    list_filter = ('file_type', 'uploaded_at')
-    search_fields = ('user__username', 'file_type')
-
-@admin.register(Profile)
-class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('id', 'user', 'bio', 'location', 'birth_date')
-    search_fields = ('user__username', 'bio', 'location')
