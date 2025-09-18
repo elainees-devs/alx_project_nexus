@@ -1,80 +1,81 @@
-from rest_framework import permissions, status, generics
-from rest_framework.views import APIView
+#jobsboard/companies/views.py
+from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
+from drf_yasg.utils import swagger_auto_schema
 from .models import Industry, Company
 from .serializers import IndustrySerializer, CompanySerializer
 
 
-class IndustryAPIView(APIView):
-    def get(self, request):
-        industries = Industry.objects.all()
-        serializer = IndustrySerializer(industries, many=True)
-        return Response(serializer.data)
+# -----------------------------
+# Industry ViewSet
+# -----------------------------
+class IndustryViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for managing industries.
+    """
+    queryset = Industry.objects.all()
+    serializer_class = IndustrySerializer
 
-    def post(self, request):
-        serializer = IndustrySerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # Public GET, others require authentication
+    def get_permissions(self):
+        if self.action in ['list', 'retrieve']:
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 
-    def put(self, request, pk):
-        try:
-            industry = Industry.objects.get(pk=pk)
-        except Industry.DoesNotExist:
-            return Response({"error": "Industry not found"}, status=status.HTTP_404_NOT_FOUND)
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
-        serializer = IndustrySerializer(industry, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
 
-    def delete(self, request, pk):
-        try:
-            industry = Industry.objects.get(pk=pk)
-        except Industry.DoesNotExist:
-            return Response({"error": "Industry not found"}, status=status.HTTP_404_NOT_FOUND)
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
 
-        industry.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
 
 
-class CompanyAPIView(generics.ListCreateAPIView, generics.RetrieveUpdateDestroyAPIView):
+# -----------------------------
+# Company ViewSet
+# -----------------------------
+class CompanyViewSet(viewsets.ModelViewSet):
+    """
+    API endpoint for managing companies.
+    Requires JWT authentication.
+    """
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
     permission_classes = [permissions.IsAuthenticated]
 
-    def get_object(self):
-        pk = self.kwargs.get("pk")
-        if pk:
-            return generics.get_object_or_404(Company, pk=pk)
-        return None
+    # Automatically set owner to request.user on creation
+    def perform_create(self, serializer):
+        serializer.save(owner=self.request.user)
 
-    def post(self, request):
-        serializer = CompanySerializer(data=request.data)
-        if serializer.is_valid():
-            serializer.save(owner=request.user)  # set owner automatically
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # Swagger security annotations
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
 
-    def put(self, request, pk):
-        try:
-            company = Company.objects.get(pk=pk)
-        except Company.DoesNotExist:
-            return Response({"error": "Company not found"}, status=status.HTTP_404_NOT_FOUND)
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def retrieve(self, request, *args, **kwargs):
+        return super().retrieve(request, *args, **kwargs)
 
-        serializer = CompanySerializer(company, data=request.data, partial=True)
-        if serializer.is_valid():
-            serializer.save()
-            return Response(serializer.data)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def create(self, request, *args, **kwargs):
+        return super().create(request, *args, **kwargs)
 
-    def delete(self, request, pk):
-        try:
-            company = Company.objects.get(pk=pk)
-        except Company.DoesNotExist:
-            return Response({"error": "Company not found"}, status=status.HTTP_404_NOT_FOUND)
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def update(self, request, *args, **kwargs):
+        return super().update(request, *args, **kwargs)
 
-        company.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def partial_update(self, request, *args, **kwargs):
+        return super().partial_update(request, *args, **kwargs)
+
+    @swagger_auto_schema(security=[{"Bearer": []}])
+    def destroy(self, request, *args, **kwargs):
+        return super().destroy(request, *args, **kwargs)
