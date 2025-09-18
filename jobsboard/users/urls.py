@@ -1,40 +1,34 @@
-# jobsboard/users/urls.py
-from django.urls import path
+#jobboard/users/urls.py
+from django.urls import path, include
+from rest_framework.routers import DefaultRouter
 from .views import (
+    UsersViewSet,
+    UserFileViewSet,
     SignUpAPIView,
     LoginAPIView,
     LogoutAPIView,
     PasswordResetRequestAPIView,
     SetNewPasswordAPIView,
     ProfileAPIView,
-    UserFileAPIView,
     users_home,
 )
 
-urlpatterns = [
-    path("", users_home, name="api-users-home"),
-    # Signup
-    path("signup/", SignUpAPIView.as_view(), name="api-signup"),
-    # Login
-    path("login/", LoginAPIView.as_view(), name="api-login"),
-    # Logout
-    path("logout/", LogoutAPIView.as_view(), name="api-logout"),
-    # Password reset request
-    path(
-        "password-reset/",
-        PasswordResetRequestAPIView.as_view(),
-        name="api-password-reset",
-    ),
-    # Set new password (link from email)
-    path(
-        "reset/<uidb64>/<token>/",
-        SetNewPasswordAPIView.as_view(),
-        name="api-set-new-password",
-    ),
-    # Profile (requires login)
-    path("profile/", ProfileAPIView.as_view(), name="api-profile"),
-    # UserFile endpoints
-    path('files/', UserFileAPIView.as_view(), name='api-user-files'),
-    path('files/<int:file_id>/', UserFileAPIView.as_view(), name='api-user-file-detail')
+router = DefaultRouter()
+router.register(r'users', UsersViewSet, basename='user')        # Admin-only list
+router.register(r'files', UserFileViewSet, basename='userfile') # User files CRUD
 
+urlpatterns = [
+    # Root informational endpoint
+    path("", users_home, name="api-users-home"),
+
+    # Auth & Profile endpoints
+    path("signup/", SignUpAPIView.as_view(), name="api-signup"),
+    path("login/", LoginAPIView.as_view(), name="api-login"),
+    path("logout/", LogoutAPIView.as_view(), name="api-logout"),
+    path("password-reset/", PasswordResetRequestAPIView.as_view(), name="api-password-reset"),
+    path("reset/<uidb64>/<token>/", SetNewPasswordAPIView.as_view(), name="api-set-new-password"),
+    path("profile/", ProfileAPIView.as_view(), name="api-profile"),
+
+    # Router endpoints for ViewSets (keep last to avoid conflicts)
+    path("", include(router.urls)),
 ]
