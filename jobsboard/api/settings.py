@@ -47,12 +47,27 @@ REST_FRAMEWORK = {
     ],
 }
 
-AUTH_USER_MODEL = 'users.User'
 
-LOGIN_REDIRECT_URL = 'profile'   # where to go after login
-LOGOUT_REDIRECT_URL = 'login'
-LOGIN_URL = '/admin/login/'
-LOGOUT_URL = '/admin/logout/'
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=1),
+}
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': "JWT Authorization header using the Bearer scheme. Example: 'Bearer <token>'",
+        }
+    },
+}
+
+AUTH_USER_MODEL = 'users.User'
+LOGIN_REDIRECT_URL = '/admin/'   # after admin login, go to admin home
+LOGOUT_REDIRECT_URL = '/admin/'  # after logout, go to admin home
+LOGIN_URL = '/admin/login/'      # where admin should login if unauthenticated
 
 
 MIDDLEWARE = [
@@ -115,7 +130,6 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS=env("SECURE_HSTS_INCLUDE_SUBDOMAINS", default=Tru
 SECURE_HSTS_PRELOAD=env("SECURE_HSTS_PRELOAD", default=True)
 
 # Secure cookies
-# Secure cookies 
 SESSION_COOKIE_SECURE=env("SESSION_COOKIE_SECURE", default=False)
 CSRF_COOKIE_SECURE=env("CSRF_COOKIE_SECURE", default=False)
 SESSION_COOKIE_HTTPONLY=env("SESSION_COOKIE_HTTPONLY", default=True)
