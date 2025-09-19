@@ -13,7 +13,7 @@ class Skill(models.Model):
  
 
 class Job(models.Model):
-       # Enum choices
+    # Enum choices
     EMPLOYMENT_TYPE_CHOICES = [
         ("full_time", "Full Time"),
         ("part_time", "Part Time"),
@@ -21,7 +21,6 @@ class Job(models.Model):
         ("internship", "Internship"),
         ("temporary", "Temporary"),
     ]
-
 
     WORK_LOCATION_TYPE_CHOICES = [
         ("onsite", "Onsite"),
@@ -42,42 +41,63 @@ class Job(models.Model):
         ("draft", "Draft"),
     ]
 
-    title=models.CharField(max_length=255)
-    description=models.TextField()
-    location=models.CharField(max_length=255)
-    employment_type=models.CharField(max_length=20, choices=EMPLOYMENT_TYPE_CHOICES)
-    work_location_type=models.CharField(max_length=20, choices=WORK_LOCATION_TYPE_CHOICES)
-    experience_level=models.CharField(max_length=20, choices=EXPERIENCE_LEVEL_CHOICES)
-    salary_min=models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True )
-    salary_max=models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True )
-    posted_date=models.DateTimeField(auto_now_add=True)
-    closing_date=models.DateTimeField(blank=True, null=True)
-    status=models.CharField(max_length=20, choices=JOB_STATUS_CHOICES)
+    title = models.CharField(max_length=255)
+    description = models.TextField()
+    location = models.CharField(max_length=255)
+    employment_type = models.CharField(max_length=20, choices=EMPLOYMENT_TYPE_CHOICES)
+    work_location_type = models.CharField(max_length=20, choices=WORK_LOCATION_TYPE_CHOICES)
+    experience_level = models.CharField(max_length=20, choices=EXPERIENCE_LEVEL_CHOICES)
+    salary_min = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    salary_max = models.DecimalField(max_digits=12, decimal_places=2, blank=True, null=True)
+    posted_date = models.DateTimeField(auto_now_add=True)
+    closing_date = models.DateTimeField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=JOB_STATUS_CHOICES)
     company = models.ForeignKey(
-        'companies.Company', 
+        'companies.Company',
         on_delete=models.CASCADE,
         related_name="jobs"
     )
-    skills=models.ManyToManyField("Skill", related_name="jobs", through="JobSkill")
+    skills = models.ManyToManyField(
+        "Skill",
+        related_name="jobs",
+        through="JobSkill"
+    )
     created_by = models.ForeignKey(
-    settings.AUTH_USER_MODEL,
-    on_delete=models.SET_NULL,
-    null=True,
-    blank=True,
-    related_name="created_jobs"
-)
-
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="created_jobs"
+    )
 
     def __str__(self):
         return self.title
-    
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['company'], name='idx_jobs_company'),
+            models.Index(fields=['status'], name='idx_jobs_status'),
+            models.Index(fields=['posted_date'], name='idx_jobs_posted_date'),
+        ]
 
 class JobSkill(models.Model):
-    job = models.ForeignKey(Job, on_delete=models.CASCADE)
-    skill = models.ForeignKey(Skill, on_delete=models.CASCADE)
+    job = models.ForeignKey(
+        'Job',
+        on_delete=models.CASCADE,
+        related_name='job_skills'
+    )
+    skill = models.ForeignKey(
+        'Skill',
+        on_delete=models.CASCADE,
+        related_name='job_skills'
+    )
 
     class Meta:
         unique_together = ('job', 'skill')
+        indexes = [
+            models.Index(fields=['job'], name='idx_job_skills_job'),
+            models.Index(fields=['skill'], name='idx_job_skills_skill'),
+        ]
 
     def __str__(self):
         return f"{self.job.title} - {self.skill.name}"
