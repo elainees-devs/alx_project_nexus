@@ -1,4 +1,3 @@
-
 ---
 
 # ALX Project Nexus
@@ -34,20 +33,20 @@ The **ProDev Backend track** equips learners with practical backend development 
 
 * **Challenge:** Complex query optimization for large datasets
 
-  * **Solution:** Applied indexing, query filtering, and caching.
+  * **Solution:** Applied indexing, query filtering, and caching
 * **Challenge:** Handling secure authentication/authorization
 
-  * **Solution:** Implemented JWT with role-based access control.
+  * **Solution:** Implemented JWT with role-based access control
 * **Challenge:** Seamless frontend-backend collaboration
 
-  * **Solution:** Created well-documented REST/GraphQL APIs and shared Swagger docs.
+  * **Solution:** Created well-documented REST/GraphQL APIs and shared Swagger docs
 
 ### Best Practices & Personal Takeaways
 
-* Write **modular, maintainable code** following Django best practices.
-* Always **document APIs** for frontend developers.
-* Use **Git commit conventions** to keep history clean and meaningful.
-* Embrace **collaboration and peer reviews** for better project outcomes.
+* Write **modular, maintainable code** following Django best practices
+* Always **document APIs** for frontend developers
+* Use **Git commit conventions** to keep history clean and meaningful
+* Embrace **collaboration and peer reviews** for better project outcomes
 
 ---
 
@@ -55,31 +54,39 @@ The **ProDev Backend track** equips learners with practical backend development 
 
 ### 🎯 Project Goals
 
-* **API Development** – CRUD for job postings, categories, and applications
+* **API Development** – CRUD for job postings, companies, industries, categories, and applications
 * **Access Control** – Role-based permissions for admins & users
 * **Database Efficiency** – Optimized queries with indexing for fast job searches
+* **Security & Logging** – Request logging, rate limiting, and secure user actions
 
 ### ⚙️ Technologies Used
 
-| Technology     | Purpose                                 |
-| -------------- | --------------------------------------- |
-| **Django**     | Backend framework for rapid development |
-| **PostgreSQL** | Relational database for job board data  |
-| **JWT**        | Role-based authentication               |
-| **Swagger**    | API documentation and testing           |
+| Technology          | Purpose                                 |
+| ------------------- | --------------------------------------- |
+| **Django**          | Backend framework for rapid development |
+| **PostgreSQL**      | Relational database for job board data  |
+| **JWT**             | Role-based authentication               |
+| **Swagger/OpenAPI** | API documentation and testing           |
+| **Redis**           | Optional caching for performance        |
 
 ---
 
 ### 🔑 Key Features
 
 * **Job Posting Management** – Create, update, delete, and retrieve job postings
-* **Job Categorization** – Filter by industry, location, and type
+* **Company & Industry Management** – Manage companies, industries, and owners
+* **Job Categorization & Search** – Filter by industry, location, type, and skills
+* **Applications Management** – Users can apply to jobs and upload files (resume/CV/cover letter)
 * **Role-Based Authentication** –
 
-  * Admins manage jobs & categories
+  * Admins manage jobs, companies, and categories
   * Users apply for jobs & manage applications
-* **Optimized Job Search** – Indexed queries, category & location-based filtering
-* **API Documentation** – Available at `/api/docs`
+* **Notifications System** – User-specific alerts for application updates and events
+* **Payments Management** – Track job posting fees and subscriptions
+* **Request Logs & Rate Limiting** – Audit API requests and prevent abuse
+* **Optimized Job Search** – Indexed queries for status, company, posted date, skills
+* **HTTPS Enforcement** – All external URLs and requests should use HTTPS
+* **API Documentation** – Accessible at `/api/docs`
 
 ---
 
@@ -92,22 +99,113 @@ The **ProDev Backend track** equips learners with practical backend development 
   * `feat: set up Django project with PostgreSQL`
 * **Feature Development**
 
-  * `feat: implement job posting and filtering APIs`
-  * `feat: add role-based authentication for admins and users`
+  * `feat: implement company, job, and skill models with CRUD APIs`
+  * `feat: add applications, file uploads, and role-based authentication`
+  * `feat: implement notifications and payment models`
+  * `feat: add request logging and rate limiting`
 * **Optimization**
 
   * `perf: optimize job search queries with indexing`
+  * `perf: enforce HTTPS and secure URL validation`
 * **Documentation**
 
-  * `feat: integrate Swagger for API documentation`
-  * `docs: update README with usage details`
+  * `feat: integrate Swagger/OpenAPI for API documentation`
+  * `docs: update README with project overview and setup instructions`
 
 ---
 
 ## 📤 Deployment
 
-* **Deployment:** Backend API hosted with integrated Swagger docs.
-* **Documentation:** Accessible at `/api/docs`.
+* **Deployment:** Backend API hosted with integrated Swagger docs
+* **Documentation:** Accessible at `/api/docs`
+* **HTTPS Enforcement:** All production traffic redirected to HTTPS
 
 ---
 
+## ⚡ Local Setup Instructions
+
+1. **Clone the Repository**
+
+```bash
+git clone <your-repo-url>
+cd jobsboard
+```
+
+2. **Create and Activate Virtual Environment**
+
+```bash
+python -m venv venv
+# Linux/macOS
+source venv/bin/activate
+# Windows
+venv\Scripts\activate
+```
+
+3. **Install Dependencies**
+
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+4. **Configure Environment Variables**
+   Create `.env` in the project root:
+
+```env
+DEBUG=True
+SECRET_KEY=<your-secret-key>
+DATABASE_URL=postgres://user:password@localhost:5432/jobsboard
+ALLOWED_HOSTS=localhost,127.0.0.1
+```
+
+5. **Apply Migrations**
+
+```bash
+python manage.py migrate
+```
+
+6. **Create Superuser**
+
+```bash
+python manage.py createsuperuser
+```
+
+7. **Collect Static Files**
+
+```bash
+python manage.py collectstatic
+```
+
+8. **Run Development Server**
+
+```bash
+python manage.py runserver
+```
+
+---
+
+## 🧪 Running Tests
+
+```bash
+python manage.py test
+```
+
+Tests cover all apps: `companies`, `jobs`, `applications`, `notifications`, `payments`, `request_logs`, and `rate_limit`.
+
+---
+
+## 📌 Notes
+
+* Ensure `media/` and `static/` folders exist for file uploads
+* Indexes and unique constraints optimize query performance
+* Rate limiting protects APIs from excessive requests
+* Request logging captures API usage for auditing
+* HTTPS enforced for all external URLs and requests
+
+---
+
+## License
+
+Elaine Muhombe © 2025
+
+```
