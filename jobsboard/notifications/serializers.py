@@ -18,6 +18,9 @@ class NotificationSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'user', 'created_at']
 
 class NotificationCreateSerializer(serializers.ModelSerializer):
+    id = serializers.IntegerField(read_only=True)
+
     class Meta:
         model = Notification
-        fields = ['title', 'message', 'link', 'type']
+        fields = ["id", "title", "message"]
+
