@@ -10,6 +10,7 @@ from drf_yasg.utils import swagger_auto_schema
 from django.conf import settings
 
 from .models import Payment
+from .permissions import PaymentPermission
 from .serializers import PaymentSerializer, PaymentInputSerializer, PaymentVerifySerializer
 
 logger = logging.getLogger(__name__)
@@ -25,11 +26,13 @@ class PaymentViewSet(viewsets.ModelViewSet):
     - verified payments (custom)
     """
     serializer_class = PaymentSerializer
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [PaymentPermission]
     queryset = Payment.objects.all()
 
     # Users only see their own payments
     def get_queryset(self):
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return Payment.objects.all()
         return Payment.objects.filter(user=self.request.user)
 
     # -------------------------
