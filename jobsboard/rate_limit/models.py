@@ -31,6 +31,9 @@ class RateLimit(models.Model):
 
     class Meta:
         unique_together = ("user", "action", "period_start")
+        indexes = [
+            models.Index(fields=['user', 'action'], name='idx_rate_limits_user_action'),
+        ]
 
     def __str__(self):
         return f"{self.user} - {self.action} ({self.count})"
