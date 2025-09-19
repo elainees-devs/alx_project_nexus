@@ -2,6 +2,8 @@
 from rest_framework import viewsets, permissions, status
 from rest_framework.response import Response
 from drf_yasg.utils import swagger_auto_schema
+from rest_framework_simplejwt.authentication import JWTAuthentication
+
 from .models import Industry, Company
 from .serializers import IndustrySerializer, CompanySerializer
 
@@ -15,11 +17,14 @@ class IndustryViewSet(viewsets.ModelViewSet):
     """
     queryset = Industry.objects.all()
     serializer_class = IndustrySerializer
+    authentication_classes = [JWTAuthentication]
 
     # Public GET, others require authentication
     def get_permissions(self):
         if self.action in ['list', 'retrieve']:
             return [permissions.AllowAny()]
+        elif self.action == 'destroy':  # DELETE only for admins
+            return [permissions.IsAdminUser()]
         return [permissions.IsAuthenticated()]
 
     @swagger_auto_schema(security=[{"Bearer": []}])
@@ -40,16 +45,46 @@ class IndustryViewSet(viewsets.ModelViewSet):
 
 
 # -----------------------------
+# Company Permissions
+# -----------------------------
+class IsEmployerOrAdmin(permissions.BasePermission):
+    """
+    Custom permission:
+    - Employers and admins can create/update
+    - Admins only can delete
+    """
+
+    def has_permission(self, request, view):
+        # Public list & retrieve
+        if view.action in ['list', 'retrieve']:
+            return True
+
+        # Admins can do everything
+        if request.user and request.user.is_staff:
+            return True
+
+        # Employers can create and update
+        if view.action in ['create', 'update', 'partial_update']:
+            return getattr(request.user, "role", None) == "employer"
+
+        # Delete restricted to admins only
+        if view.action == 'destroy':
+            return request.user and request.user.is_staff
+
+        return False
+
+
+# -----------------------------
 # Company ViewSet
 # -----------------------------
 class CompanyViewSet(viewsets.ModelViewSet):
     """
     API endpoint for managing companies.
-    Requires JWT authentication.
     """
     queryset = Company.objects.all()
     serializer_class = CompanySerializer
-    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [JWTAuthentication]
+    permission_classes = [IsEmployerOrAdmin]
 
     # Automatically set owner to request.user on creation
     def perform_create(self, serializer):
