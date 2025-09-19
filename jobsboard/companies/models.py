@@ -55,6 +55,14 @@ class Company(models.Model):
         app_label = 'companies'
         verbose_name_plural = 'Companies'
         ordering = ['name']
+        indexes = [
+            models.Index(fields=['name'], name='idx_company_name'),
+            models.Index(fields=['industry'], name='idx_company_industry'),
+            models.Index(fields=['owner'], name='idx_company_owner'),
+        ]
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'owner'], name='unique_company_per_owner')
+        ]
 
     def __str__(self):
         return self.name
