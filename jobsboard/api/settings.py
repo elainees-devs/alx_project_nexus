@@ -35,9 +35,7 @@ INSTALLED_APPS = [
     'jobs',
     'applications',
     'payments',
-    'security',
     'companies',
-    'logs',
     'notifications',
     'rate_limit',
     'request_logs',
@@ -89,6 +87,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    
+    # custom middleware
+    'request_logs.middleware.RequestLoggingMiddleware',
 ]
 
 ROOT_URLCONF = 'api.urls'
@@ -110,6 +111,9 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'api.wsgi.application'
+
+# Base URL
+BASE_URL = env("BASE_URL") # For local dev
 
 
 # Database
