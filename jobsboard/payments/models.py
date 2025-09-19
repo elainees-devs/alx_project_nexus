@@ -35,3 +35,10 @@ class Payment(models.Model):
     payment_type = models.CharField(max_length=50, choices=PAYMENT_TYPE_CHOICES, default="job_posting")
     created_at = models.DateTimeField(default=timezone.now)
     updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        indexes = [
+            models.Index(fields=['user'], name='idx_payments_user_id'),
+            models.Index(fields=['status'], name='idx_payments_status'),
+            models.Index(fields=['provider'], name='idx_payments_provider'),
+        ]
