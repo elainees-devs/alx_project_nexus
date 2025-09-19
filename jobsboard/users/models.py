@@ -8,6 +8,8 @@ from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
 from PIL import Image
 
+from companies.models import Company
+
 # ----------------------------
 # Custom User Manager
 # ----------------------------
@@ -35,22 +37,30 @@ class CustomUserManager(BaseUserManager):
 # ----------------------------
 class User(AbstractUser):
     ROLE_SEEKER = 'SEEKER'
-    ROLE_RECRUITER = 'RECRUITER'
+    ROLE_EMPLOYER = 'EMPLOYER'
     ROLE_ADMIN = 'ADMIN'
 
     ROLE_CHOICES = [
         (ROLE_SEEKER, 'Job Seeker'),
-        (ROLE_RECRUITER, 'Recruiter'),
+        (ROLE_EMPLOYER, 'Employer'),
         (ROLE_ADMIN, 'Administrator'),
     ]
 
     ROLE_PERMISSIONS = {
         ROLE_SEEKER: ['view_user'],
-        ROLE_RECRUITER: ['change_user_role'],
+        ROLE_EMPLOYER: ['change_user_role'],
         ROLE_ADMIN: ['change_user_role', 'deactivate_user'],
     }
 
     role = models.CharField(max_length=15, choices=ROLE_CHOICES, default=ROLE_SEEKER)
+        # seekers/employees can belong to one company
+    company = models.ForeignKey(
+        Company,
+        related_name="employees",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL
+    )
     middle_name = models.CharField(max_length=30, blank=True, null=True)
     last_login_ip = models.GenericIPAddressField(null=True, blank=True)
 
@@ -75,7 +85,7 @@ class User(AbstractUser):
 
     @property
     def is_recruiter(self):
-        return self.role == self.ROLE_RECRUITER
+        return self.role == self.ROLE_EMPLOYER
 
     @property
     def is_admin(self):
@@ -91,7 +101,7 @@ def assign_group_and_permissions(sender, instance, created, **kwargs):
     if created:
         group_name = {
             User.ROLE_SEEKER: 'Job Seekers',
-            User.ROLE_RECRUITER: 'Recruiters',
+            User.ROLE_EMPLOYER: 'Employers',
             User.ROLE_ADMIN: 'Administrators'
         }.get(instance.role)
 
