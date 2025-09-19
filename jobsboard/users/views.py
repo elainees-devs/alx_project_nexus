@@ -30,7 +30,7 @@ User = get_user_model()
 def home(request):
     return JsonResponse({
         "message": "Welcome to the JobsBoard API",
-        "instructions": "Use /api/users/ to access user endpoints."
+        "instructions": "Use /swagger to access swagger documentation."
     })
 
 
