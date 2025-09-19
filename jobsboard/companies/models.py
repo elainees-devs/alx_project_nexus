@@ -1,7 +1,14 @@
 from django.db import models
 from django.conf import settings
 from django.core.validators import URLValidator, MinLengthValidator
+from django.core.exceptions import ValidationError
 
+def validate_https(url):
+    validator = URLValidator(schemes=['https'])
+    try:
+        validator(url)
+    except ValidationError:
+        raise ValidationError("Website URL must use HTTPS.")
 
 class Industry(models.Model):
     name = models.CharField(max_length=100)
@@ -28,10 +35,11 @@ class Company(models.Model):
     )
     logo = models.ImageField(upload_to='company_logos/', blank=False)
     website = models.URLField(
-        blank=True, 
+        blank=True,
         null=True,
-        validators=[URLValidator(message="Enter a valid website URL.")]
+        validators=[validate_https],
     )
+
     industry = models.ForeignKey(
         Industry, 
         on_delete=models.CASCADE, 
