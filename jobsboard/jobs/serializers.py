@@ -1,6 +1,7 @@
 # jobsboard/jobs/serializers.py
 from django.shortcuts import render
 from rest_framework import serializers
+
 from .models import Skill,Job, JobSkill
 
 class SkillSerializer(serializers.ModelSerializer):
