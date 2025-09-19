@@ -1,7 +1,8 @@
 #jobboard/payments/serializers.py
 from rest_framework import serializers
-from .models import Payment
 from django.contrib.auth import get_user_model
+
+from .models import Payment
 
 User = get_user_model()
 
