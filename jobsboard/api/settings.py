@@ -33,7 +33,7 @@ INSTALLED_APPS = [
     'security',
     'companies',
     'logs',
-    'notifications'
+    'notifications',
     'django_celery_results'
    
 ]
