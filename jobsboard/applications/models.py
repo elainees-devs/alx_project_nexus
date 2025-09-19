@@ -15,7 +15,7 @@ class Application(models.Model):
     # Enum choices
     APPLICATION_STATUS_CHOICES = [
         ('pending', 'Pending'),
-        ('reviewd', 'Reviewed'),
+        ('reviewed', 'Reviewed'),
         ('interview', 'Interview'),
         ('rejected', 'Rejected'),
         ('accepted', 'Accepted'),
@@ -41,6 +41,9 @@ class Application(models.Model):
         indexes = [
             models.Index(fields=['job'], name='idx_applications_job'),
             models.Index(fields=['applicant'], name='idx_applications_applicant'),
+            models.Index(fields=['status'], name='idx_applications_status'),
+            models.Index(fields=['reviewed_by'], name='idx_applications_reviewed_by'),  
+            models.Index(fields=['applied_at'], name='idx_applications_applied_at'),
         ]
 
     def __str__(self):
