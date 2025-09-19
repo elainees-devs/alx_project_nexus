@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     'companies',
     'logs',
     'notifications',
+    'rate_limit',
     'django_celery_results'
    
 ]
