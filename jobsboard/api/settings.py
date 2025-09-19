@@ -24,8 +24,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    # 3rd party apps
     'rest_framework',
+    'django_celery_results'
     'drf_yasg', # for swagger
+
+    # custom apps
     'users',
     'jobs',
     'applications',
@@ -35,7 +40,8 @@ INSTALLED_APPS = [
     'logs',
     'notifications',
     'rate_limit',
-    'django_celery_results'
+    'request_logs',
+    
    
 ]
 
