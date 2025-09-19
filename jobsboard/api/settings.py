@@ -27,7 +27,7 @@ INSTALLED_APPS = [
 
     # 3rd party apps
     'rest_framework',
-    'django_celery_results'
+    'django_celery_results',
     'drf_yasg', # for swagger
 
     # custom apps
