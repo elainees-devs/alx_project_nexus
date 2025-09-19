@@ -25,6 +25,12 @@ class Notification(models.Model):
     )
     created_at=models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        indexes = [
+            models.Index(fields=['user'], name='idx_notifications_user'),
+            models.Index(fields=['is_read'], name='idx_notifications_is_read'),
+        ]
+
     def __str__(self):
         return f"{self.user} - {self.title} ({'Read' if self.is_read else 'Unread'})"
 
