@@ -38,6 +38,10 @@ class Application(models.Model):
 
     class Meta:
         unique_together = ['job', 'applicant']
+        indexes = [
+            models.Index(fields=['job'], name='idx_applications_job'),
+            models.Index(fields=['applicant'], name='idx_applications_applicant'),
+        ]
 
     def __str__(self):
         return f"{self.applicant.username} - {self.job.title}"
