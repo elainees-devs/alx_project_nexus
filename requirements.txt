@@ -1,6 +1,5 @@
 acme==1.21.0
 amqp==5.3.1
-apturl==0.5.2
 asgiref==3.9.0
 async-timeout==5.0.1
 attrs==21.2.0
