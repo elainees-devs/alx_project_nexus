@@ -2,6 +2,8 @@ import environ
 from pathlib import Path
 import os
 from datetime import timedelta
+import dj_database_url
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -9,6 +11,25 @@ env = environ.Env(
     DEBUG=(bool, False)  # default DEBUG value
 )
 env.read_env(BASE_DIR / ".env")  # read .env file
+
+# Detect environment
+DJANGO_ENV = env("DJANGO_ENV", default="development")
+
+# -------------------------
+# CORS settings
+# -------------------------
+if DJANGO_ENV == "development":
+    # Allow all origins locally
+    CORS_ALLOW_ALL_ORIGINS = True
+else:
+    # Production: restrict origins
+    CORS_ALLOW_ALL_ORIGINS = False
+    CORS_ALLOWED_ORIGINS = [
+        "https://alx-project-nexus-mtwe.onrender.com",
+        # Add other allowed origins
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ]
 
 SECRET_KEY = env("SECRET_KEY")
 DEBUG = env("DEBUG")
@@ -162,12 +183,7 @@ CSRF_COOKIE_SECURE=env("CSRF_COOKIE_SECURE", default=False)
 SESSION_COOKIE_HTTPONLY=env("SESSION_COOKIE_HTTPONLY", default=True)
 CSRF_COOKIE_HTTPONLY=env("CSRF_COOKIE_HTTPONLY", default=False)  # keep False unless you never use AJAX forms
 
-# CORS settings (if you're building an API)
-CORS_ALLOW_ALL_ORIGINS=env('CORS_ALLOW_ALL_ORIGINS', default=False)
-CORS_ALLOWED_ORIGINS=[
-    "http://localhost:3000",
-    "http://127.0.0.1:3000",
-]
+
 
 # -----------------------
 # Email settings
