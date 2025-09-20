@@ -6,7 +6,6 @@ attrs==21.2.0
 bcrypt==3.2.0
 billiard==4.2.1
 blinker==1.4
-Brlapi==0.8.3
 celery==5.5.3
 certbot==1.21.0
 certbot-nginx==1.21.0
