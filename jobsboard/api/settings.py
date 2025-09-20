@@ -31,7 +31,7 @@ else:
         "http://127.0.0.1:3000",
     ]
 
-SECRET_KEY = env("SECRET_KEY")
+SECRET_KEY = env("SECRET_KEY", default="django-insecure-xyz123")
 DEBUG = env("DEBUG")
 ALLOWED_HOSTS = ['*']
 
