@@ -117,17 +117,28 @@ WSGI_APPLICATION = 'api.wsgi.application'
 BASE_URL = env("BASE_URL") # For local dev
 
 
+# -------------------------
 # Database
-DATABASES = {
-    "default": {
-        "ENGINE": env("DATABASE_ENGINE", default="django.db.backends.postgresql"),
-        "NAME": env("DATABASE_NAME"),
-        "USER": env("DATABASE_USER"),
-        "PASSWORD": env("DATABASE_PASSWORD"),
-        "HOST": env("DATABASE_HOST"),
-        "PORT": env("DATABASE_PORT"),
+# -------------------------
+DATABASE_URL = env("DATABASE_URL", default=None)
+
+if DATABASE_URL:
+    # Use single DATABASE_URL if provided (e.g., Render)
+    DATABASES = {
+        "default": dj_database_url.config(default=DATABASE_URL, conn_max_age=600)
     }
-}
+else:
+    # Fallback: use individual environment variables (local development)
+    DATABASES = {
+        "default": {
+            "ENGINE": env("DATABASE_ENGINE", default="django.db.backends.postgresql"),
+            "NAME": env("DATABASE_NAME", default="postgres"),
+            "USER": env("DATABASE_USER", default="postgres"),
+            "PASSWORD": env("DATABASE_PASSWORD", default="postgres"),
+            "HOST": env("DATABASE_HOST", default="localhost"),
+            "PORT": env("DATABASE_PORT", default="5432"),
+        }
+    }
 
 
 # Password validation
