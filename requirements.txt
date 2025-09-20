@@ -35,7 +35,7 @@ docopt==0.6.2
 drf-nested-routers==0.94.2
 drf-yasg==1.21.10
 fasteners==0.14.1
-future==0.18.2
+future==0.18.3
 git-filter-repo==2.47.0
 graphene==3.4.3
 graphql-core==3.2.6
