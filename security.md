@@ -151,4 +151,4 @@
 ---
 
 **Security Architecture diagram** (layers from user → API → DB with security at each step)
-![alt text](image-2.png)
+![alt text](image-1.png)
