@@ -1,6 +1,13 @@
----
 
-# ALX Project Nexus
+
+# ALX Project Nexus  
+
+![Python](https://img.shields.io/badge/Python-3.10+-blue?logo=python&logoColor=white)  
+![Django](https://img.shields.io/badge/Django-4.2-green?logo=django&logoColor=white)  
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15-blue?logo=postgresql&logoColor=white)  
+![License](https://img.shields.io/badge/License-MIT-yellow?logo=open-source-initiative&logoColor=white)  
+
+---
 
 ## 📌 Project Objective
 
@@ -83,7 +90,8 @@ The **ProDev Backend track** equips learners with practical backend development 
 * **Request Logs & Rate Limiting** – Audit API requests and prevent abuse
 * **Optimized Job Search** – Indexed queries for status, company, posted date, skills
 * **HTTPS Enforcement** – All external URLs and requests should use HTTPS
-* **API Documentation** – Accessible at `https://alx-project-nexus-mtwe.onrender.com/swagger/`
+* **API Documentation** – Accessible at [https://alx-project-nexus-mtwe.onrender.com/swagger](https://alx-project-nexus-mtwe.onrender.com/swagger)
+
 
 ---
 
@@ -118,10 +126,15 @@ The Entity-Relationship Diagram (ERD) below illustrates the relationships betwee
 
 📌 [View ERD on ] https://docs.google.com/document/d/1Sr78-cNPMXzJdgv_cPX5D_yWNBI94hn5mk4n2CTDdFY/edit?usp=sharing
 
+
+## 🔒 Security
+
+Please see the [SECURITY.md](./SECURITY.md) file for details on supported versions and how to report vulnerabilities.
 ## 📤 Deployment
 
 * **Deployment:** Backend API hosted with integrated Swagger docs in render
-* **Documentation:** Accessible at `https://alx-project-nexus-mtwe.onrender.com/swagger/`
+* **Documentation** – Accessible at [https://alx-project-nexus-mtwe.onrender.com/swagger](https://alx-project-nexus-mtwe.onrender.com/swagger)
+
 * **HTTPS Enforcement:** All production traffic redirected to HTTPS
 
 ---
@@ -208,8 +221,25 @@ Tests cover all apps: `companies`, `jobs`, `applications`, `notifications`, `pay
 
 ---
 
-## License
+## 🔑 Test Credentials (Development Only)
 
-Elaine Muhombe © 2025
+Use these demo accounts to log into the system (local/dev only):
+
+| Username   | Password          | Role        |
+|------------|------------------|-------------|
+| admin      | AdminPassword123 | Admin       |
+| seeker1    | SeekerPass123    | Job Seeker  |
+| seeker2    | SeekerPass123    | Job Seeker  |
+| employer1  | EmployerPass123  | Employer    |
+| employer2  | EmployerPass123  | Employer    |
+| employer3  | EmployerPass123  | Employer    |
+
+⚠️ These credentials are for testing only.  
+They must **not** be used in production.
+
+
+## License
+This project is licensed under the [MIT License](LICENSE).
+
 
 ```
