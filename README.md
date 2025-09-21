@@ -17,9 +17,6 @@ The **ProDev Backend track** equips learners with practical backend development 
 * **Python** – Core programming for backend logic
 * **Django** – High-level web framework for rapid development
 * **Django REST Framework (DRF)** – Building RESTful APIs
-* **GraphQL** – Efficient API querying
-* **Docker** – Containerization for consistent environments
-* **CI/CD** – Automated build, test, and deployment pipelines
 
 ### Important Backend Concepts Learned
 
@@ -86,7 +83,7 @@ The **ProDev Backend track** equips learners with practical backend development 
 * **Request Logs & Rate Limiting** – Audit API requests and prevent abuse
 * **Optimized Job Search** – Indexed queries for status, company, posted date, skills
 * **HTTPS Enforcement** – All external URLs and requests should use HTTPS
-* **API Documentation** – Accessible at `/api/docs`
+* **API Documentation** – Accessible at `https://alx-project-nexus-mtwe.onrender.com/swagger/`
 
 ---
 
@@ -109,15 +106,22 @@ The **ProDev Backend track** equips learners with practical backend development 
   * `perf: enforce HTTPS and secure URL validation`
 * **Documentation**
 
-  * `feat: integrate Swagger/OpenAPI for API documentation`
+  * `feat: integrate Swagger for API documentation`
   * `docs: update README with project overview and setup instructions`
 
 ---
 
+
+## 🗂 Database Schema (ERD)
+
+The Entity-Relationship Diagram (ERD) below illustrates the relationships between the main models (`users`, `companies`, `jobs`, `applications`, `notifications`, `payments`, `request_logs`, `rate_limit`).
+
+📌 [View ERD on ] https://docs.google.com/document/d/1Sr78-cNPMXzJdgv_cPX5D_yWNBI94hn5mk4n2CTDdFY/edit?usp=sharing
+
 ## 📤 Deployment
 
-* **Deployment:** Backend API hosted with integrated Swagger docs
-* **Documentation:** Accessible at `/api/docs`
+* **Deployment:** Backend API hosted with integrated Swagger docs in render
+* **Documentation:** Accessible at `https://alx-project-nexus-mtwe.onrender.com/swagger/`
 * **HTTPS Enforcement:** All production traffic redirected to HTTPS
 
 ---
