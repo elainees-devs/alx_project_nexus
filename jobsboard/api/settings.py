@@ -55,6 +55,7 @@ INSTALLED_APPS = [
     # custom apps
     'users',
     'jobs',
+    'analytics',
     'applications',
     'payments',
     'companies',
