@@ -178,6 +178,13 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
+# Password hashers (use bcrypt for secure hashing)
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',  # bcrypt + SHA256
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',        # fallback
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',    # optional fallback
+]
+
 
 # HTTPS Security settings
 SECURE_SSL_REDIRECT=env("SECURE_SSL_REDIRECT", default=False)
