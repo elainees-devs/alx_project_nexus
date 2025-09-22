@@ -1,0 +1,13 @@
+venv
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.log
+.env
+.git
+.gitignore
+image-1.png
+local_db_dump.sql
