@@ -199,6 +199,26 @@ python manage.py collectstatic
 python manage.py runserver
 ```
 
+
+🐳 Running with Docker
+
+Build Docker Images
+
+docker-compose build
+
+
+Run Containers
+
+docker-compose up
+
+
+Stop Containers
+
+docker-compose down
+
+
+Your backend, database, and optional services (Redis) will run in isolated containers.
+
 ---
 
 ## 🧪 Running Tests
