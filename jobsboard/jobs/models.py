@@ -7,6 +7,7 @@ class Skill(models.Model):
 
     class Meta:
         verbose_name_plural='Skills'
+        ordering=["name"]
 
     def __str__(self):
         return self.name
@@ -42,7 +43,7 @@ class Job(models.Model):
     ]
 
     title = models.CharField(max_length=255)
-    description = models.TextField()
+    description = models.JSONField(default=list, blank=True, null=True)
     location = models.CharField(max_length=255)
     employment_type = models.CharField(max_length=20, choices=EMPLOYMENT_TYPE_CHOICES)
     work_location_type = models.CharField(max_length=20, choices=WORK_LOCATION_TYPE_CHOICES)
@@ -74,6 +75,7 @@ class Job(models.Model):
         return self.title
 
     class Meta:
+        ordering = ["id"]
         indexes = [
             models.Index(fields=['company'], name='idx_jobs_company'),
             models.Index(fields=['status'], name='idx_jobs_status'),
@@ -94,6 +96,7 @@ class JobSkill(models.Model):
 
     class Meta:
         unique_together = ('job', 'skill')
+        ordering=["id"]
         indexes = [
             models.Index(fields=['job'], name='idx_job_skills_job'),
             models.Index(fields=['skill'], name='idx_job_skills_skill'),
