@@ -1,4 +1,4 @@
-#jobsboard/users/views.py
+# jobsboard/users/views.py
 import logging
 from django.http import JsonResponse
 from django.contrib.auth import login, logout, get_user_model
@@ -6,8 +6,8 @@ from django.contrib.auth.tokens import default_token_generator
 from django.utils.http import urlsafe_base64_encode
 from django.utils.encoding import force_bytes
 from django.core.mail import send_mail
-from rest_framework import viewsets, status, permissions
-from rest_framework.decorators import action
+from rest_framework import viewsets, status, permissions, mixins
+from rest_framework.decorators import action, permission_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from drf_yasg.utils import swagger_auto_schema
@@ -38,7 +38,7 @@ def users_home(request):
     return JsonResponse({
         "message": "Welcome to the Users API",
         "endpoints": {
-            "signup": "/api/users/signup/",
+            "auth/signup": "/api/users/signup/",
             "auth/login": "/api/users/auth/login/",
             "auth/logout": "/api/users/auth/logout/",
             "auth/password-reset": "/api/users/auth/password-reset/",
@@ -47,34 +47,50 @@ def users_home(request):
         }
     })
 
-
-# -------------------------
-# Authentication ViewSet
-# -------------------------
 class AuthViewSet(viewsets.ViewSet):
     """
-    Handles login, logout, password reset, and set new password.
+    Handles signup, login, logout, password reset.
     """
-    permission_classes = [permissions.AllowAny]
+    permission_classes = [permissions.AllowAny]  # default for all actions
 
+    # -------------------------
+    # Signup (public)
+    # -------------------------
+    @action(detail=False, methods=["post"], url_path="signup")
+    def signup(self, request):
+        serializer = SignUpSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+
+        user_data = UserSerializer(user).data
+        return Response(
+            {"message": "Account created successfully.", "user": user_data},
+            status=status.HTTP_201_CREATED
+        )
+
+    # -------------------------
+    # Login (public)
+    # -------------------------
     @action(detail=False, methods=["post"], url_path="login")
     def login_user(self, request):
         serializer = LoginSerializer(data=request.data, context={"request": request})
         serializer.is_valid(raise_exception=True)
         user = serializer.validated_data['user']
-
-        # Reset failed login counter on success
-        from rate_limit.models import RateLimit
-        RateLimit.objects.filter(user=user, action__name="failed_login").delete()
-
         login(request, user)
-        return Response({"username": user.username, "user": UserSerializer(user).data}, status=status.HTTP_200_OK)
+        return Response(
+            {"message": "Login successful", "user": UserSerializer(user).data},
+            status=status.HTTP_200_OK
+        )
 
+    # -------------------------
+    # Logout (requires authentication)
+    # -------------------------
     @action(detail=False, methods=["post"], url_path="logout", permission_classes=[permissions.IsAuthenticated])
     def logout_user(self, request):
         logout(request)
-        return Response({"detail": "Logged out successfully."}, status=status.HTTP_200_OK)
-
+        return Response({"message": "Logged out successfully."}, status=status.HTTP_200_OK)
+    # Password Reset Request
+    # -------------------------
     @action(detail=False, methods=["post"], url_path="password-reset")
     def password_reset(self, request):
         serializer = PasswordResetRequestSerializer(data=request.data)
@@ -83,7 +99,6 @@ class AuthViewSet(viewsets.ViewSet):
 
         try:
             user = User.objects.get(email=email)
-            # Rate-limit password reset requests
             try:
                 check_rate_limit(user, "password_reset", limit=3, period_seconds=3600, request=request)
             except RateLimitExceeded:
@@ -95,6 +110,7 @@ class AuthViewSet(viewsets.ViewSet):
             uid = urlsafe_base64_encode(force_bytes(user.pk))
             token = default_token_generator.make_token(user)
             reset_link = request.build_absolute_uri(f"/api/users/auth/reset/{uid}/{token}/")
+
             send_mail(
                 subject="Password Reset Request",
                 message=f"Click the link to reset your password: {reset_link}",
@@ -102,10 +118,14 @@ class AuthViewSet(viewsets.ViewSet):
                 recipient_list=[email],
             )
         except User.DoesNotExist:
+            # Always return generic message to avoid email enumeration
             pass
 
         return Response({"detail": "Password reset link sent"}, status=status.HTTP_200_OK)
 
+    # -------------------------
+    # Set New Password
+    # -------------------------
     @action(
         detail=False,
         methods=["post"],
@@ -128,7 +148,17 @@ class AuthViewSet(viewsets.ViewSet):
 # -------------------------
 # Users ViewSet (Admin-only)
 # -------------------------
-class UsersViewSet(viewsets.ModelViewSet):
+class UsersViewSet(
+    mixins.ListModelMixin,
+    mixins.RetrieveModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet
+):
+    """
+    Admins can list, retrieve, update, and delete users.
+    But cannot create new users via /users/.
+    """
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAdminUser]
@@ -143,24 +173,18 @@ class UserFileViewSet(viewsets.ModelViewSet):
     parser_classes = [MultiPartParser, FormParser]
 
     def get_queryset(self):
-        return UserFile.objects.filter(user=self.request.user)
+        # Swagger schema generation
+        if getattr(self, "swagger_fake_view", False):
+            return UserFile.objects.none()
+
+        user = self.request.user
+        if not user.is_authenticated:
+            return UserFile.objects.none()
+
+        return UserFile.objects.filter(user=user)
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-
-
-# -------------------------
-# Signup API
-# -------------------------
-class SignUpAPIView(viewsets.ViewSet):
-    permission_classes = [permissions.AllowAny]
-
-    @action(detail=False, methods=["post"])
-    def signup(self, request):
-        serializer = SignUpSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        serializer.save()
-        return Response({"message": "Account created successfully."}, status=status.HTTP_201_CREATED)
 
 
 # -------------------------
