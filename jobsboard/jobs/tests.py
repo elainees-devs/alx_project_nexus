@@ -1,8 +1,8 @@
-#jobsboard/jobs/test.py
+# jobsboard/jobs/tests.py
 from django.urls import reverse
+from django.test import TestCase
 from rest_framework.test import APIClient
 from rest_framework import status
-from django.test import TestCase
 from django.contrib.auth import get_user_model
 from companies.models import Company, Industry
 from jobs.models import Job, Skill, JobSkill
@@ -63,7 +63,7 @@ class JobAPITestCase(TestCase):
         self.client.force_authenticate(user=self.seeker)
         url = reverse("job-apply", args=[self.job.id])
         response = self.client.post(url)
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED) 
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertIn("applied", response.data["message"])
 
     def test_apply_to_job_as_employer_forbidden(self):
