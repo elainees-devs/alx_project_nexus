@@ -1,187 +1,119 @@
-# jobsboard/payments/views.py
-import time
-import json
-import logging
+import uuid
 import requests
 from rest_framework import viewsets, status, permissions
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from django.urls import reverse
 from drf_yasg.utils import swagger_auto_schema
-from django.conf import settings
 
+from users.models import User
 from .models import Payment
-from .permissions import PaymentPermission
-from .serializers import PaymentSerializer, PaymentInputSerializer, PaymentVerifySerializer
-
-logger = logging.getLogger(__name__)
+from .serializers import PaymentInputSerializer, PaymentSerializer
+from .services.chapa import ChapaAPI
 
 
 class PaymentViewSet(viewsets.ModelViewSet):
-    """
-    ModelViewSet for Chapaa payments:
-    - list (all payments for user)
-    - retrieve (single payment)
-    - initiate payment (custom)
-    - verify payment (custom)
-    - verified payments (custom)
-    """
-    serializer_class = PaymentSerializer
-    permission_classes = [PaymentPermission]
     queryset = Payment.objects.all()
+    serializer_class = PaymentSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
-    # Users only see their own payments
     def get_queryset(self):
-        if self.request.user.is_staff or self.request.user.is_superuser:
+        user = self.request.user
+        if user.is_authenticated and (user.is_staff or user.role == User.ROLE_ADMIN):
             return Payment.objects.all()
-        return Payment.objects.filter(user=self.request.user)
+        if user.is_authenticated:
+            return Payment.objects.filter(user=user)
+        return Payment.objects.none()
 
-    # -------------------------
-    # List & Retrieve & CRUD
-    # -------------------------
-    @swagger_auto_schema(security=[{"Bearer": []}])
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
-
-    @swagger_auto_schema(security=[{"Bearer": []}])
-    def retrieve(self, request, *args, **kwargs):
-        return super().retrieve(request, *args, **kwargs)
-
-    @swagger_auto_schema(security=[{"Bearer": []}])
-    def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
-
-    @swagger_auto_schema(security=[{"Bearer": []}])
-    def update(self, request, *args, **kwargs):
-        return super().update(request, *args, **kwargs)
-
-    @swagger_auto_schema(security=[{"Bearer": []}])
-    def partial_update(self, request, *args, **kwargs):
-        return super().partial_update(request, *args, **kwargs)
-
-    @swagger_auto_schema(security=[{"Bearer": []}])
-    def destroy(self, request, *args, **kwargs):
-        return super().destroy(request, *args, **kwargs)
-
-    # -------------------------
-    # Initiate Payment
-    # -------------------------
     @swagger_auto_schema(
-        methods=['post'],
+        method='post',
         request_body=PaymentInputSerializer,
-        responses={201: PaymentSerializer},
-        operation_description="Initiate Chapaa payment for job posting or premium subscription",
-        security=[{"Bearer": []}]
+        responses={201: PaymentSerializer}
     )
-    @action(detail=False, methods=['post'], url_path='initiate')
-    def initiate(self, request):
+    @action(detail=False, methods=["post"], url_path="initiate", permission_classes=[IsAuthenticated])
+    def initiate_payment(self, request):
         serializer = PaymentInputSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+        if serializer.is_valid():
+            data = serializer.validated_data
+            chapa = ChapaAPI()
 
-        amount = serializer.validated_data["amount"]
-        currency = serializer.validated_data.get("currency", "USD")
-        description = serializer.validated_data.get("description", "")
-        metadata = serializer.validated_data.get("metadata", {})
-        payment_type = serializer.validated_data["payment_type"]
+            # Ensure tx_ref exists
+            tx_ref = data.get("tx_ref") or f"jobplatform-{uuid.uuid4()}"
 
-        # Prevent duplicate payment
-        if Payment.objects.filter(user=request.user, metadata=metadata).exists():
-            return Response({"error": "Payment already exists"}, status=status.HTTP_400_BAD_REQUEST)
+            callback_url = data.get("callback_url") or request.build_absolute_uri(reverse("payments-callback"))
+            return_url = data.get("return_url") or "https://example.com/"
 
-        payment_ref = f"{payment_type}_{int(time.time())}"
-        payload = {
-            "amount": str(amount),
-            "currency": currency,
-            "email": request.user.email,
-            "tx_ref": payment_ref,
-            "callback_url": f"{settings.BASE_URL}/api/payments/verify/",
-        }
+            # Provide defaults for optional fields
+            email = data.get("email") or getattr(request.user, "email", "guest@example.com")
+            first_name = data.get("first_name") or getattr(request.user, "first_name", "Guest")
+            last_name = data.get("last_name") or getattr(request.user, "last_name", "User")
+            phone_number = data.get("phone_number") or "0912345678"
+            customization = data.get("customization") or {
+                "title": f"Payment for {data['payment_type']}",
+                "description": data.get("description", "")
+            }
 
-        headers = {
-            "Authorization": f"Bearer {settings.CHAPA_SECRET_KEY}",
-            "Content-Type": "application/json"
-        }
-
-        try:
-            response = requests.post(
-                "https://api.chapa.co/v1/transaction/initialize",
-                headers=headers,
-                data=json.dumps(payload),
-                timeout=10
-            )
-            response_data = response.json()
-            logger.info(f"Chapaa initiation response: {response_data}")
-
-            if response.status_code == 200 and response_data.get("status") == "success":
-                payment = Payment.objects.create(
-                    user=request.user,
-                    provider="chapaa",
-                    amount=amount,
-                    currency=currency,
-                    transaction_id=response_data["data"]["tx_ref"],
-                    description=description,
-                    metadata=metadata,
-                    status="pending",
-                    payment_type=payment_type
+            try:
+                # Initialize payment via Chapa
+                response = chapa.initialize_payment(
+                    amount=str(data["amount"]),
+                    currency=data.get("currency", "ETB"),
+                    email=email,
+                    first_name=first_name,
+                    last_name=last_name,
+                    phone_number=phone_number,
+                    tx_ref=tx_ref,
+                    callback_url=callback_url,
+                    return_url=return_url,
+                    customization=customization
                 )
-                return Response({
-                    "payment": PaymentSerializer(payment).data,
-                    "payment_url": response_data["data"]["checkout_url"]
-                }, status=status.HTTP_201_CREATED)
+            except requests.exceptions.HTTPError as e:
+                return Response({"error": "Chapa API error", "details": str(e)}, status=status.HTTP_400_BAD_REQUEST)
 
-            return Response({"error": "Payment initiation failed"}, status=status.HTTP_400_BAD_REQUEST)
-        except requests.exceptions.RequestException as e:
-            logger.error(f"Chapaa request error: {str(e)}")
-            return Response({"error": "Payment initiation failed"}, status=status.HTTP_400_BAD_REQUEST)
-
-    # -------------------------
-    # Verify Payment
-    # -------------------------
-    @swagger_auto_schema(
-        methods=['post'],
-        request_body=PaymentVerifySerializer,
-        responses={200: PaymentSerializer},
-        operation_description="Verify a Chapaa payment by transaction ID",
-        security=[{"Bearer": []}]
-    )
-    @action(detail=False, methods=['post'], url_path='verify')
-    def verify(self, request):
-        serializer = PaymentVerifySerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        payment = serializer.validated_data["payment_instance"]
-
-        try:
-            response = requests.get(
-                f"https://api.chapa.co/v1/transaction/verify/{payment.transaction_id}",
-                headers={"Authorization": f"Bearer {settings.CHAPA_SECRET_KEY}"},
-                timeout=10
+            # Save payment locally
+            payment = Payment.objects.create(
+                user=request.user,
+                amount=data["amount"],
+                currency=data.get("currency", "ETB"),
+                email=email,
+                first_name=first_name,
+                last_name=last_name,
+                phone_number=phone_number,
+                tx_ref=tx_ref,
+                callback_url=callback_url,
+                return_url=return_url,
+                customization=customization
             )
-            response_data = response.json()
-            logger.info(f"Chapaa verify response: {response_data}")
 
-            if response.status_code == 200 and response_data.get("status") == "success":
-                payment.status = "completed"
-                payment.save()
-                return Response({"status": "completed", "payment": PaymentSerializer(payment).data})
+            return Response({
+                "checkout_url": response["data"]["checkout_url"],
+                "payment": PaymentSerializer(payment).data
+            }, status=status.HTTP_201_CREATED)
 
-            payment.status = "failed"
-            payment.save()
-            return Response({"status": "failed", "payment": PaymentSerializer(payment).data},
-                            status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            logger.error(f"Chapaa verification error: {str(e)}")
-            return Response({"error": "Payment verification failed"}, status=status.HTTP_400_BAD_REQUEST)
+        # If serializer is invalid
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    # -------------------------
-    # List Verified Payments
-    # -------------------------
-    @swagger_auto_schema(
-        methods=['get'],
-        responses={200: PaymentSerializer(many=True)},
-        operation_description="List all completed Chapaa payments for the logged-in user",
-        security=[{"Bearer": []}]
-    )
-    @action(detail=False, methods=['get'], url_path='verified')
-    def verified(self, request):
-        payments = Payment.objects.filter(user=request.user, provider="chapaa", status="completed")
-        serializer = PaymentSerializer(payments, many=True)
-        return Response(serializer.data)
+    @action(detail=True, methods=["post"], url_path="verify")
+    def verify_payment(self, request, pk=None):
+        payment = self.get_object()
+        chapa = ChapaAPI()
+        verification = chapa.verify_payment(payment.tx_ref)
+
+        return Response({
+            "verification": verification,
+            "payment": PaymentSerializer(payment).data
+        }, status=status.HTTP_200_OK)
+
+    @action(detail=False, methods=["post"], url_path="callback", url_name="payments-callback")
+    def payments_callback(self, request):
+        tx_ref = request.data.get("tx_ref")
+        try:
+            payment = Payment.objects.get(tx_ref=tx_ref)
+        except Payment.DoesNotExist:
+            return Response({"error": "Payment not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        chapa = ChapaAPI()
+        verification = chapa.verify_payment(tx_ref)
+
+        return Response({"message": "Callback processed", "verification": verification})
