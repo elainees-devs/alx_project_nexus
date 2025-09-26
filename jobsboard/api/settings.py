@@ -252,12 +252,6 @@ LOGGING = {
         },
     },
     'handlers': {
-        'file': {
-            'level': 'ERROR',   # Only log errors and above
-            'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'api/logs/django_errors.log'),
-            'formatter': 'verbose',
-        },
         'console': {
             'class': 'logging.StreamHandler',
             'formatter': 'simple',
@@ -265,12 +259,13 @@ LOGGING = {
     },
     'loggers': {
         'django': {
-            'handlers': ['file', 'console'],
-            'level': 'ERROR',
+            'handlers': ['console'],
+            'level': 'ERROR',  # Only log errors and above
             'propagate': True,
         },
     },
 }
+
 
 
 # Static files (CSS, JavaScript, Images)
