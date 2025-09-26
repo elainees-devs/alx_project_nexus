@@ -3,12 +3,13 @@ from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework_simplejwt.authentication import JWTAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.exceptions import PermissionDenied
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
+import logging
 
 from .permissions import JobPermission
 from .models import Skill, Job, JobSkill
@@ -16,6 +17,7 @@ from users.models import User
 from .filters import JobFilter
 from .serializers import SkillSerializer, JobSerializer, JobSkillSerializer
 
+logger = logging.getLogger(__name__)
 
 # -----------------------------
 # Skill ViewSet
@@ -50,7 +52,6 @@ class SkillViewSet(viewsets.ModelViewSet):
 # -----------------------------
 # Job ViewSet
 # -----------------------------
-
 class JobViewSet(viewsets.ModelViewSet):
     """
     API endpoint for managing jobs.
@@ -68,88 +69,54 @@ class JobViewSet(viewsets.ModelViewSet):
     search_fields = ["title", "company__name", "description"]
     ordering_fields = ["salary_min", "salary_max", "posted_date"]
 
-    @swagger_auto_schema(
-        manual_parameters=[
-            openapi.Parameter(
-                "employment_type", openapi.IN_QUERY,
-                description="Employment type",
-                type=openapi.TYPE_STRING,
-                enum=[choice[0] for choice in Job.EMPLOYMENT_TYPE_CHOICES],
-            ),
-            openapi.Parameter(
-                "work_location_type", openapi.IN_QUERY,
-                description="Work location type",
-                type=openapi.TYPE_STRING,
-                enum=[choice[0] for choice in Job.WORK_LOCATION_TYPE_CHOICES],
-            ),
-            openapi.Parameter(
-                "experience_level", openapi.IN_QUERY,
-                description="Experience level",
-                type=openapi.TYPE_STRING,
-                enum=[choice[0] for choice in Job.EXPERIENCE_LEVEL_CHOICES],
-            ),
-            openapi.Parameter(
-                "status", openapi.IN_QUERY,
-                description="Job status",
-                type=openapi.TYPE_STRING,
-                enum=[choice[0] for choice in Job.JOB_STATUS_CHOICES],
-            ),
-            openapi.Parameter(
-                "location", openapi.IN_QUERY,
-                description="Filter by job location (city or country)",
-                type=openapi.TYPE_STRING
-            ),
-            openapi.Parameter(
-                "min_salary", openapi.IN_QUERY,
-                description="Minimum salary",
-                type=openapi.TYPE_NUMBER,
-                format=openapi.FORMAT_DECIMAL,
-            ),
-            openapi.Parameter(
-                "max_salary", openapi.IN_QUERY,
-                description="Maximum salary",
-                type=openapi.TYPE_NUMBER,
-                format=openapi.FORMAT_DECIMAL,
-            ),
-            openapi.Parameter(
-                "ordering", openapi.IN_QUERY,
-                description="Order results by `salary_min`, `salary_max`, or `posted_date` (prefix with `-` for descending)",
-                type=openapi.TYPE_STRING,
-            ),
-            openapi.Parameter(
-                "search", openapi.IN_QUERY,
-                description="Search jobs by title, company name, or description",
-                type=openapi.TYPE_STRING,
-            ),
-        ],
-        security=[{"Bearer": []}]
-    )
-    def list(self, request, *args, **kwargs):
-        return super().list(request, *args, **kwargs)
+    def get_permissions(self):
+        # Allow Swagger to see POST endpoint
+        if getattr(self, '_swagger_fake_view', False):
+            return [AllowAny()]
+        return super().get_permissions()
 
-    @swagger_auto_schema(security=[{"Bearer": []}])
-    def retrieve(self, request, *args, **kwargs):
-        return super().retrieve(request, *args, **kwargs)
+    # -----------------------------
+    # Swagger parameters for filtering
+    # -----------------------------
+    title_param = openapi.Parameter(
+        'title', openapi.IN_QUERY,
+        description="Filter jobs by title (case-insensitive, partial match)",
+        type=openapi.TYPE_STRING
+    )
+    industry_param = openapi.Parameter(
+        'industry', openapi.IN_QUERY,
+        description="Filter jobs by industry name (case-insensitive, partial match)",
+        type=openapi.TYPE_STRING
+    )
+    min_salary_param = openapi.Parameter(
+        'min_salary', openapi.IN_QUERY,
+        description="Filter jobs with minimum salary greater than or equal to this value",
+        type=openapi.TYPE_NUMBER
+    )
+    max_salary_param = openapi.Parameter(
+        'max_salary', openapi.IN_QUERY,
+        description="Filter jobs with maximum salary less than or equal to this value",
+        type=openapi.TYPE_NUMBER
+    )
+    status_param = openapi.Parameter(
+        'status', openapi.IN_QUERY,
+        description="Filter jobs by status (open, closed, draft)",
+        type=openapi.TYPE_STRING
+    )
+
+
 
     @swagger_auto_schema(security=[{"Bearer": []}])
     def create(self, request, *args, **kwargs):
-        return super().create(request, *args, **kwargs)
+        logger.info(f"User {request.user} is creating a job")
+        try:
+            response = super().create(request, *args, **kwargs)
+            logger.info(f"Job created successfully by {request.user}")
+            return response
+        except Exception as e:
+            logger.error(f"Error creating job by {request.user}: {str(e)}", exc_info=True)
+            raise
 
-    @swagger_auto_schema(security=[{"Bearer": []}])
-    def update(self, request, *args, **kwargs):
-        return super().update(request, *args, **kwargs)
-
-    @swagger_auto_schema(security=[{"Bearer": []}])
-    def partial_update(self, request, *args, **kwargs):
-        return super().partial_update(request, *args, **kwargs)
-
-    @swagger_auto_schema(security=[{"Bearer": []}])
-    def destroy(self, request, *args, **kwargs):
-        return super().destroy(request, *args, **kwargs)
-
-    # -----------------------------
-    # Apply action (Job Seekers only)
-    # -----------------------------
     @swagger_auto_schema(security=[{"Bearer": []}])
     @action(detail=True, methods=["post"], url_path="apply", permission_classes=[IsAuthenticated])
     def apply(self, request, pk=None):
@@ -160,7 +127,10 @@ class JobViewSet(viewsets.ModelViewSet):
 
         # Role check
         if request.user.role != User.ROLE_SEEKER:
+            logger.warning(f"Permission denied: {request.user} tried to apply for job {job.id}")
             raise PermissionDenied("Only job seekers can apply for jobs.")
+
+        logger.info(f"User {request.user.username} is applying for job {job.id} - {job.title}")
 
         # Example: saving application (future)
         # JobApplication.objects.create(user=request.user, job=job)
