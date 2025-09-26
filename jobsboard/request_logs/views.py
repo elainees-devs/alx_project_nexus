@@ -12,20 +12,21 @@ logger = logging.getLogger(__name__)
 
 
 class RequestLogViewSet(viewsets.ModelViewSet):
-    """
-    Request logs viewset:
-    - Normal users: can view their own logs
-    - Admins: can view/manage all logs
-    """
     serializer_class = RequestLogSerializer
-    permission_classes = [permissions.IsAuthenticated, IsOwnerOrAdmin]
-    queryset = RequestLog.objects.all()
+    permission_classes = [permissions.IsAuthenticated]
 
     def get_queryset(self):
+        # Safe for Swagger/OpenAPI schema generation
+        if getattr(self, "swagger_fake_view", False):
+            return RequestLog.objects.none()
+
         user = self.request.user
-        if user.is_superuser:
-            return RequestLog.objects.all()
+        if not user.is_authenticated:
+            return RequestLog.objects.none()
+
+        # Users only see their own logs
         return RequestLog.objects.filter(user=user)
+
 
 
     def has_admin_rights(self, request):

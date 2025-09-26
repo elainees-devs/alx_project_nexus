@@ -1,37 +1,49 @@
-#jobsboard/payments/permissions.py
 from rest_framework import permissions
+from users.models import User
+
 
 class PaymentPermission(permissions.BasePermission):
     """
-    Custom rules for payments:
-    - All authenticated users can create (initiate) and verify their own payments.
+    Payment access rules:
+    - Job Seekers, Employers, and Admins can initiate payments.
     - Users can list/retrieve only their own payments.
+    - Verification is allowed for the owner or admin.
     - Updates and deletes are restricted to admins.
     """
 
     def has_permission(self, request, view):
-        # Must be logged in
-        if not request.user or not request.user.is_authenticated:
+        user = request.user
+
+        if not user or not user.is_authenticated:
             return False
 
-        # Everyone can use custom actions 'initiate' and 'verify'
-        if view.action in ["initiate", "verify", "verified"]:
+        # ✅ Initiate: Seekers, Employers, Admins
+        if view.action == "initiate":
+            return user.role in [User.ROLE_SEEKER, User.ROLE_EMPLOYER, User.ROLE_ADMIN]
+
+        # ✅ Verify: allowed for owner (checked later in object perms) or admin
+        if view.action in ["verify", "verified"]:
             return True
 
-        # Only admins can update/destroy
+        # ✅ Admin-only actions
         if view.action in ["update", "partial_update", "destroy"]:
-            return request.user.is_staff or request.user.is_superuser
+            return user.role == User.ROLE_ADMIN
 
-        # List/retrieve is allowed for all authenticated users
+        # ✅ Listing & retrieving: all authenticated users
         if view.action in ["list", "retrieve", "create"]:
             return True
 
         return False
 
     def has_object_permission(self, request, view, obj):
-        # Admins can always act
-        if request.user.is_staff or request.user.is_superuser:
+        user = request.user
+
+        # ✅ Admins can always act
+        if user.role == User.ROLE_ADMIN:
             return True
 
-        # Otherwise, user must own the payment
-        return obj.user == request.user
+        # ✅ Owners can view/verify their own payments
+        if view.action in ["retrieve", "verify", "verified", "list"]:
+            return obj.user == user
+
+        return False

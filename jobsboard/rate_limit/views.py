@@ -1,4 +1,5 @@
-#jobsboard/rate_limit/views.py
+# jobsboard/rate_limit/views.py
+import logging
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -9,6 +10,8 @@ from companies.models import Company, Industry
 from .services import check_rate_limit, RateLimitExceeded
 from jobs.models import Job
 from .permissions import IsCompanyOwner, IsJobOwner
+
+logger = logging.getLogger(__name__)
 
 
 class RateLimitViewSet(viewsets.ViewSet):
@@ -30,6 +33,7 @@ class RateLimitViewSet(viewsets.ViewSet):
         try:
             check_rate_limit(request.user, "create_job", limit=3, period_seconds=60)
         except RateLimitExceeded as e:
+            logger.warning(f"Rate limit exceeded for user {request.user} on create_job. Retry after {e} seconds")
             return Response(
                 {"error": f"Rate limit exceeded. Retry after {e} seconds."},
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -43,6 +47,7 @@ class RateLimitViewSet(viewsets.ViewSet):
                 owner=request.user,
                 industry=industry,
             )
+            logger.info(f"Default company created for user {request.user}")
 
         job = Job.objects.create(
             title=request.data.get("title", "Untitled Job"),
@@ -50,6 +55,7 @@ class RateLimitViewSet(viewsets.ViewSet):
             created_by=request.user,
             company=company,
         )
+        logger.info(f"Job {job.id} created by {request.user} in company {company.name}")
 
         return Response(
             {
@@ -67,6 +73,7 @@ class RateLimitViewSet(viewsets.ViewSet):
         try:
             check_rate_limit(request.user, "delete_job", limit=3, period_seconds=60)
         except RateLimitExceeded as e:
+            logger.warning(f"Rate limit exceeded for user {request.user} on delete_job. Retry after {e} seconds")
             return Response(
                 {"error": f"Rate limit exceeded. Retry after {e} seconds."},
                 status=status.HTTP_429_TOO_MANY_REQUESTS,
@@ -74,10 +81,11 @@ class RateLimitViewSet(viewsets.ViewSet):
 
         try:
             job = Job.objects.get(id=pk)
-            # Object-level permission check
             self.check_object_permissions(request, job)
             job.delete()
+            logger.info(f"Job {pk} deleted by {request.user}")
         except Job.DoesNotExist:
+            logger.error(f"User {request.user} tried to delete non-existent job {pk}")
             return Response(
                 {"error": "Job not found"}, status=status.HTTP_404_NOT_FOUND
             )

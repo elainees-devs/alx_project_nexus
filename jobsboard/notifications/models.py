@@ -33,4 +33,3 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.user} - {self.title} ({'Read' if self.is_read else 'Unread'})"
-

@@ -1,7 +1,5 @@
-#jobboard/payments/serializers.py
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
-
 from .models import Payment
 
 User = get_user_model()
@@ -11,6 +9,7 @@ User = get_user_model()
 # Payment Serializer
 # ------------------------
 class PaymentSerializer(serializers.ModelSerializer):
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
 
     class Meta:
@@ -19,46 +18,53 @@ class PaymentSerializer(serializers.ModelSerializer):
             'id',
             'user',
             'user_email',
-            'provider',
             'amount',
             'currency',
-            'status',
-            'transaction_id',
-            'description',
-            'metadata',
-            'payment_type',
+            'email',
+            'first_name',
+            'last_name',
+            'phone_number',
+            'tx_ref',
+            'callback_url',
+            'return_url',
+            'customization',
             'created_at',
-            'updated_at'
+            'updated_at',
         ]
-        read_only_fields = ['id', 'status', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'created_at', 'updated_at']
 
 
 # ------------------------
 # Input serializer for initiating payment
 # ------------------------
 class PaymentInputSerializer(serializers.Serializer):
-    amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=True)
-    currency = serializers.CharField(max_length=10, default="USD", required=False)
-    description = serializers.CharField(max_length=500, required=False, allow_blank=True)
-    metadata = serializers.JSONField(required=False)
-    payment_type = serializers.ChoiceField(choices=Payment.PAYMENT_TYPE_CHOICES, required=True)
+    amount = serializers.DecimalField(max_digits=12, decimal_places=2)
+    currency = serializers.CharField(max_length=10, default="ETB")
+    email = serializers.EmailField(required=True)
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+    phone_number = serializers.CharField(required=True)
+    tx_ref = serializers.CharField(required=True)
+    callback_url = serializers.URLField(required=True)
+    return_url = serializers.URLField(required=True)
+    customization = serializers.JSONField(required=True)
 
 
 # ------------------------
 # Serializer for verifying payment
 # ------------------------
 class PaymentVerifySerializer(serializers.Serializer):
-    transaction_id = serializers.CharField(max_length=255, required=True)
+    tx_ref = serializers.CharField(max_length=100, required=True)
 
-    def validate_transaction_id(self, value):
-        if not Payment.objects.filter(transaction_id=value).exists():
-            raise serializers.ValidationError("Payment with this transaction ID does not exist.")
+    def validate_tx_ref(self, value):
+        if not Payment.objects.filter(tx_ref=value).exists():
+            raise serializers.ValidationError("Payment with this tx_ref does not exist.")
         return value
 
     def validate(self, attrs):
-        transaction_id = attrs.get("transaction_id")
-        payment = Payment.objects.filter(transaction_id=transaction_id, provider="chapaa").first()
+        tx_ref = attrs.get("tx_ref")
+        payment = Payment.objects.filter(tx_ref=tx_ref).first()
         if not payment:
-            raise serializers.ValidationError("No matching Chapaa payment found.")
+            raise serializers.ValidationError("No matching payment found.")
         attrs["payment_instance"] = payment
         return attrs

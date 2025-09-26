@@ -17,6 +17,7 @@ class Industry(models.Model):
     class Meta:
         app_label = 'companies'
         verbose_name_plural = "Industries"
+        ordering=["id"]
 
     def __str__(self):
         return self.name
