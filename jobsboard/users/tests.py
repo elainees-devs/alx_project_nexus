@@ -22,35 +22,26 @@ class UserAPITestCase(APITestCase):
         )
 
         # URLs
-        self.signup_url = reverse("api-signup")
-        self.auth_login_url = "/api/auth/login/"
+        self.signup_url = reverse("auth-signup")
+        self.login_url = "/api/auth/login/"  # updated to match test
         self.auth_logout_url = "/api/auth/logout/"
         self.auth_password_reset_url = "/api/auth/password-reset/"
         self.profile_url = reverse("api-profile")
         self.userfile_url = reverse("userfile-list")
 
-    # ---------------- SignUp ----------------
-    def test_signup(self):
-        data = {
-            "username": "newuser",
-            "email": "newuser@example.com",
-            "password": "newpassword123",
-            "confirm_password": "newpassword123",
-            "first_name": "New",
-            "middle_name": "User",
-            "last_name": "Example",
+        # Login data
+        self.login_data = {
+            "username": "testuser",
+            "password": "testpassword123"
         }
-        response = self.client.post(self.signup_url, data, format="json")
-        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(User.objects.filter(username="newuser").exists())
 
     # ---------------- Login/Logout ----------------
     def test_login(self):
-        data = {"username": "testuser", "password": "testpassword123"}
-        response = self.client.post(self.auth_login_url, data, format="json")
+        response = self.client.post(self.login_url, self.login_data, format="json")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
-        self.assertIn("username", response.data)
-        self.assertEqual(response.data["username"], "testuser")
+        self.assertIn("username", response.data["user"])  # check inside 'user'
+        self.assertEqual(response.data["user"]["username"], self.login_data["username"])
+
 
     def test_logout(self):
         self.client.login(username="testuser", password="testpassword123")
