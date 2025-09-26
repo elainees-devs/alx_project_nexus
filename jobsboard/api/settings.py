@@ -55,7 +55,6 @@ INSTALLED_APPS = [
     # custom apps
     'users',
     'jobs',
-    'analytics',
     'applications',
     'payments',
     'companies',
@@ -227,7 +226,9 @@ CELERY_TASK_ACKS_LATE = True
 CELERY_WORKER_PREFETCH_MULTIPLIER = 1
 
 # Chapa Secret key
+CHAPA_BASE_URL = env("CHAPA_BASE_URL")
 CHAPA_SECRET_KEY = env("CHAPA_SECRET_KEY")
+
 
 # Internationalization
 LANGUAGE_CODE = 'en-us'
@@ -238,14 +239,36 @@ USE_TZ = True
 
 # Logging configuration
 LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "handlers": {
-        "console": {"class": "logging.StreamHandler"},
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
     },
-    "root": {
-        "handlers": ["console"],
-        "level": "INFO",
+    'handlers': {
+        'file': {
+            'level': 'ERROR',   # Only log errors and above
+            'class': 'logging.FileHandler',
+            'filename': os.path.join(BASE_DIR, 'api/logs/django_errors.log'),
+            'formatter': 'verbose',
+        },
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
+        },
+    },
+    'loggers': {
+        'django': {
+            'handlers': ['file', 'console'],
+            'level': 'ERROR',
+            'propagate': True,
+        },
     },
 }
 
