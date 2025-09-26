@@ -15,6 +15,9 @@ class JobFilter(django_filters.FilterSet):
 
     # Text search for location
     location = django_filters.CharFilter(field_name="location", lookup_expr="icontains")
+    title = django_filters.CharFilter(field_name="title", lookup_expr="icontains")
+    industry = django_filters.CharFilter(field_name="industry__name", lookup_expr="icontains")  # if using ForeignKey to Industry
+
 
     class Meta:
         model = Job
@@ -26,5 +29,7 @@ class JobFilter(django_filters.FilterSet):
             "location",
             "min_salary",
             "max_salary",
+            "title",
+            "industry"
         ]
 
