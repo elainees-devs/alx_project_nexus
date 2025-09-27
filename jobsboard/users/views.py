@@ -11,6 +11,7 @@ from rest_framework.decorators import action, permission_classes
 from rest_framework.response import Response
 from rest_framework.parsers import MultiPartParser, FormParser
 from drf_yasg.utils import swagger_auto_schema
+from drf_yasg import openapi
 
 from .models import UserFile
 from .serializers import (
@@ -47,26 +48,44 @@ def users_home(request):
         }
     })
 
+# -------------------------
+# Signup ViewSet (public)
+# -------------------------
+
+class SignupViewSet(viewsets.ViewSet):
+    """
+    Public endpoint to create a new user.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    @swagger_auto_schema(
+        operation_description="Register a new user. Public endpoint, no auth required.",
+        request_body=SignUpSerializer,
+        responses={201: openapi.Response('User created', UserSerializer)}
+    )
+    def create(self, request):
+        """
+        POST /api/users/signup/
+        """
+        serializer = SignUpSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        user_data = UserSerializer(user).data
+        return Response(
+            {"message": "Account created successfully.", "user": user_data},
+            status=status.HTTP_201_CREATED
+        )
+
+# -------------------------
+# Auth ViewSet
+# -------------------------
 class AuthViewSet(viewsets.ViewSet):
     """
     Handles signup, login, logout, password reset.
     """
     permission_classes = [permissions.AllowAny]  # default for all actions
 
-    # -------------------------
-    # Signup (public)
-    # -------------------------
-    @action(detail=False, methods=["post"], url_path="signup")
-    def signup(self, request):
-        serializer = SignUpSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        user = serializer.save()
 
-        user_data = UserSerializer(user).data
-        return Response(
-            {"message": "Account created successfully.", "user": user_data},
-            status=status.HTTP_201_CREATED
-        )
 
     # -------------------------
     # Login (public)
