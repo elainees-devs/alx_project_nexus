@@ -2,6 +2,14 @@
 from django.db import models
 from django.conf import settings
 
+# ---------------------------------------------------------
+# Notification Model
+# ---------------------------------------------------------
+# Represents a notification sent to a user.
+# - Stores title, message, optional link, type, and read status.
+# - Supports filtering by user and read/unread status via database indexes.
+# - Provides a string representation showing user, title, and read status.
+
 class Notification(models.Model):
     NOTIFICATION_TYPE=[
         ('info', 'Info'),
