@@ -13,6 +13,16 @@ from .permissions import IsCompanyOwner, IsJobOwner
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------
+# RateLimitViewSet
+# ---------------------------------------------------------
+# API endpoint for managing rate-limited actions.
+# - Enforces rate limits on user actions such as creating or deleting jobs.
+# - Attaches custom permissions depending on the action:
+#    - create_job → user must be authenticated and company owner.
+#    - delete_job → user must be authenticated and job owner.
+# - Returns appropriate responses when limits are exceeded (HTTP 429).
+# - Logs activity for auditing and debugging purposes.
 
 class RateLimitViewSet(viewsets.ViewSet):
     permission_classes = [IsAuthenticated]
