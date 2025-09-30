@@ -1,28 +1,45 @@
-#jobsboard/companies/models.py
 from django.db import models
 from django.conf import settings
 from django.core.validators import URLValidator, MinLengthValidator
 from django.core.exceptions import ValidationError
 
+
 def validate_https(url):
+    """Ensure that a given URL starts with HTTPS."""
     validator = URLValidator(schemes=['https'])
     try:
         validator(url)
     except ValidationError:
         raise ValidationError("Website URL must use HTTPS.")
 
+
+# ---------------------------------------------------------
+# Industry Model
+# ---------------------------------------------------------
+# Represents an industry category for companies (e.g., IT, Healthcare).
+# - Used to group companies under a specific industry.
+# - Provides ordering by ID for consistent listing.
 class Industry(models.Model):
     name = models.CharField(max_length=100)
 
     class Meta:
         app_label = 'companies'
         verbose_name_plural = "Industries"
-        ordering=["id"]
+        ordering = ["id"]
 
     def __str__(self):
         return self.name
     
 
+# ---------------------------------------------------------
+# Company Model
+# ---------------------------------------------------------
+# Represents a company registered in the jobs board system.
+# - Contains details like name, description, logo, website, industry, and location.
+# - Website must use HTTPS (validated by custom validator).
+# - Associated with an owner (User) who manages the company profile.
+# - Enforces uniqueness: a single user cannot register the same company name twice.
+# - Includes indexes for faster lookups on name, industry, and owner.
 class Company(models.Model):
     name = models.CharField(
         max_length=255,
