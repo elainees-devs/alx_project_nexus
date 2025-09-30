@@ -5,9 +5,13 @@ from .models import Payment
 User = get_user_model()
 
 
-# ------------------------
-# Payment Serializer
-# ------------------------
+# ---------------------------------------------------------
+# PaymentSerializer
+# ---------------------------------------------------------
+# Serializer for the Payment model.
+# - Used for listing and retrieving payment details.
+# - Includes read-only fields for ID, timestamps, and user.
+# - Provides the user's email via a read-only field for convenience.
 class PaymentSerializer(serializers.ModelSerializer):
     user = serializers.PrimaryKeyRelatedField(read_only=True)
     user_email = serializers.CharField(source='user.email', read_only=True)
@@ -34,9 +38,12 @@ class PaymentSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at', 'updated_at']
 
 
-# ------------------------
-# Input serializer for initiating payment
-# ------------------------
+# ---------------------------------------------------------
+# PaymentInputSerializer
+# ---------------------------------------------------------
+# Serializer for initiating a new payment.
+# - Validates input fields required for creating a payment transaction.
+# - Includes amount, currency, user details, transaction reference, URLs, and customization.
 class PaymentInputSerializer(serializers.Serializer):
     amount = serializers.DecimalField(max_digits=12, decimal_places=2)
     currency = serializers.CharField(max_length=10, default="ETB")
@@ -50,9 +57,12 @@ class PaymentInputSerializer(serializers.Serializer):
     customization = serializers.JSONField(required=True)
 
 
-# ------------------------
-# Serializer for verifying payment
-# ------------------------
+# ---------------------------------------------------------
+# PaymentVerifySerializer
+# ---------------------------------------------------------
+# Serializer for verifying an existing payment.
+# - Validates that the provided transaction reference exists.
+# - Attaches the corresponding Payment instance to validated data for further processing.
 class PaymentVerifySerializer(serializers.Serializer):
     tx_ref = serializers.CharField(max_length=100, required=True)
 
