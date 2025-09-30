@@ -10,6 +10,15 @@ from .permissions import IsOwnerOrAdmin
 
 logger = logging.getLogger(__name__)
 
+# ---------------------------------------------------------
+# RequestLogViewSet
+# ---------------------------------------------------------
+# API endpoint for managing RequestLog entries.
+# - Users can view only their own request logs.
+# - Admins have full CRUD permissions (update, partial_update, delete).
+# - Integrates with RequestLogSerializer for data representation.
+# - Logs activity and enforces permissions for auditing and security purposes.
+# - Safe handling for Swagger/OpenAPI schema generation.
 
 class RequestLogViewSet(viewsets.ModelViewSet):
     serializer_class = RequestLogSerializer
