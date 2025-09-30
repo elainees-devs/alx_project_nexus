@@ -1,4 +1,3 @@
-# jobsboard/applications/admin.py
 from django.contrib import admin
 from .models import Application, ApplicationFile
 
@@ -35,3 +34,10 @@ class ApplicationFileAdmin(admin.ModelAdmin):
     list_filter = ("file_type", "uploaded_at")
     search_fields = ("application__job__title", "application__applicant__username")
     ordering = ("-uploaded_at",)
+
+    def file_path(self, obj):
+        """Return the URL or path of the uploaded file"""
+        if obj.file:
+            return obj.file.url  # Returns full URL if MEDIA_URL is configured
+        return "-"
+    file_path.short_description = "File Path"
