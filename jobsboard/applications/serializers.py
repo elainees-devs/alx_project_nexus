@@ -1,8 +1,13 @@
-# appsboard/applications/serializers.py
 from rest_framework import serializers
 from .models import Application, ApplicationFile
 
 
+# ---------------------------------------------------------
+# ApplicationFileSerializer
+# ---------------------------------------------------------
+# Serializes ApplicationFile objects:
+# - Validates uploaded files for size and type.
+# - Ensures only valid resume, CV, or cover_letter files are accepted.
 class ApplicationFileSerializer(serializers.ModelSerializer):
     """
     Serializer for ApplicationFile model.
@@ -27,6 +32,13 @@ class ApplicationFileSerializer(serializers.ModelSerializer):
         return value
 
 
+# ---------------------------------------------------------
+# ApplicationSerializer
+# ---------------------------------------------------------
+# Serializes Application objects:
+# - Provides nested files for convenience.
+# - Adds applicant/job/reviewer usernames as helper fields.
+# - Validates duplicate job applications by the same applicant.
 class ApplicationSerializer(serializers.ModelSerializer):
     """
     Serializer for Application model.
