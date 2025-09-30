@@ -10,6 +10,12 @@ from request_logs.models import RequestLog
 
 User = get_user_model()
 
+# ---------------------------------------------------------
+# SignUpSerializer
+# ---------------------------------------------------------
+# Serializer for registering new users.
+# - Ensures password and confirm_password match.
+# - Handles creation of User instances with hashed passwords.
 class SignUpSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only=True, min_length=8)
     confirm_password = serializers.CharField(write_only=True, min_length=8)
@@ -31,6 +37,13 @@ class SignUpSerializer(serializers.ModelSerializer):
         user.save()
         return user
 
+# ---------------------------------------------------------
+# LoginSerializer
+# ---------------------------------------------------------
+# Serializer for authenticating users.
+# - Validates credentials against the database.
+# - Implements rate-limiting for failed login attempts.
+# - Logs failed login attempts for auditing.
 class LoginSerializer(serializers.Serializer):
     username = serializers.CharField()
     password = serializers.CharField(write_only=True)
@@ -70,6 +83,13 @@ class LoginSerializer(serializers.Serializer):
         attrs['user'] = user
         return attrs
 
+
+# ---------------------------------------------------------
+# ProfileSerializer
+# ---------------------------------------------------------
+# Serializer for the Profile model.
+# - Exposes bio, location, birth_date, and profile_image fields.
+# - Read-only ID field.
 class ProfileSerializer(serializers.ModelSerializer):
     """Serializer for Profile model."""
     class Meta:
@@ -78,9 +98,12 @@ class ProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ['id']
 
 
-# ----------------------------
-# UserFile Serializer
-# ----------------------------
+# ---------------------------------------------------------
+# UserFileSerializer
+# ---------------------------------------------------------
+# Serializer for user-uploaded files (profile image, resume, CV).
+# - Validates files against model-defined validators.
+# - Ensures uploaded_at is read-only.
 class UserFileSerializer(serializers.ModelSerializer):
     class Meta:
         model = UserFile
@@ -99,6 +122,13 @@ class UserFileSerializer(serializers.ModelSerializer):
 
         return attrs
 
+# ---------------------------------------------------------
+# UserSerializer
+# ---------------------------------------------------------
+# Serializer for the User model.
+# - Includes nested ProfileSerializer.
+# - Exposes core user fields and role.
+# - Read-only ID and role fields.
 class UserSerializer(serializers.ModelSerializer):
     """Serializer for User model."""
     profile = ProfileSerializer(read_only=True)
@@ -108,10 +138,11 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'email', 'first_name', 'middle_name', 'last_name', 'role', 'profile']
         read_only_fields = ['id', 'role']
 
-
-
-
-
+# ---------------------------------------------------------
+# PasswordResetRequestSerializer
+# ---------------------------------------------------------
+# Serializer for requesting a password reset.
+# - Validates that the provided email exists in the system.
 class PasswordResetRequestSerializer(serializers.Serializer):
     """Serializer for requesting a password reset."""
     email = serializers.EmailField()
@@ -121,6 +152,13 @@ class PasswordResetRequestSerializer(serializers.Serializer):
             raise serializers.ValidationError("User with this email does not exist.")
         return value
 
+# ---------------------------------------------------------
+# SetNewPasswordSerializer
+# ---------------------------------------------------------
+# Serializer for setting a new password.
+# - Validates that password and confirm_password match.
+# - Validates the UID and token from the password reset link.
+# - Updates the user's password if validation passes.
 
 class SetNewPasswordSerializer(serializers.Serializer):
     password = serializers.CharField(write_only=True, min_length=8)
