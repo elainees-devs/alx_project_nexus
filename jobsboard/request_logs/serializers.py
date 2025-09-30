@@ -2,6 +2,14 @@
 from rest_framework import serializers
 from .models import RequestLog
 
+# ---------------------------------------------------------
+# RequestLogSerializer
+# ---------------------------------------------------------
+# Serializer for the RequestLog model.
+# - Converts RequestLog instances to JSON and vice versa.
+# - Read-only fields: id and timestamp (cannot be modified via API).
+# - Fields include user, IP address, endpoint, HTTP method, status code, and timestamp.
+
 class RequestLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = RequestLog
