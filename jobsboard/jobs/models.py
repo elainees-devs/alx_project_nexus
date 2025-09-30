@@ -1,18 +1,33 @@
-# jobsboard/jobs/models.py
 from django.db import models
 from django.conf import settings
 
+
+# ---------------------------------------------------------
+# Skill Model
+# ---------------------------------------------------------
+# Represents a specific skill (e.g., Python, Project Management).
+# - Used to tag jobs with required skills.
+# - Skills are unique and ordered alphabetically by name.
 class Skill(models.Model):
-    name=models.CharField(max_length=50, unique=True)
+    name = models.CharField(max_length=50, unique=True)
 
     class Meta:
-        verbose_name_plural='Skills'
-        ordering=["name"]
+        verbose_name_plural = 'Skills'
+        ordering = ["name"]
 
     def __str__(self):
         return self.name
- 
+  
 
+# ---------------------------------------------------------
+# Job Model
+# ---------------------------------------------------------
+# Represents a job posting created by a company.
+# - Includes job details like title, description, location, salary, and status.
+# - Supports classification by employment type, work location, and experience level.
+# - Linked to a company and associated with required skills (via JobSkill).
+# - Tracks metadata such as creator, posting date, and closing date.
+# - Indexed for efficient querying by company, status, and posted date.
 class Job(models.Model):
     # Enum choices
     EMPLOYMENT_TYPE_CHOICES = [
@@ -82,6 +97,14 @@ class Job(models.Model):
             models.Index(fields=['posted_date'], name='idx_jobs_posted_date'),
         ]
 
+
+# ---------------------------------------------------------
+# JobSkill Model
+# ---------------------------------------------------------
+# Represents the many-to-many relationship between jobs and skills.
+# - Each record links one job with one required skill.
+# - Enforces uniqueness so the same skill cannot be added twice to a job.
+# - Indexed for efficient querying by job and skill.
 class JobSkill(models.Model):
     job = models.ForeignKey(
         'Job',
@@ -96,7 +119,7 @@ class JobSkill(models.Model):
 
     class Meta:
         unique_together = ('job', 'skill')
-        ordering=["id"]
+        ordering = ["id"]
         indexes = [
             models.Index(fields=['job'], name='idx_job_skills_job'),
             models.Index(fields=['skill'], name='idx_job_skills_skill'),
