@@ -11,9 +11,14 @@ from .serializers import IndustrySerializer, CompanySerializer
 logger = logging.getLogger(__name__)
 
 
-# -----------------------------
-# Industry ViewSet
-# -----------------------------
+# ---------------------------------------------------------
+# IndustryViewSet
+# ---------------------------------------------------------
+# API endpoint for managing Industry objects.
+# - Allows anyone to list/retrieve industries.
+# - Authenticated users can create/update industries.
+# - Only admins can delete industries.
+# - Includes logging for create/update/delete actions.
 class IndustryViewSet(viewsets.ModelViewSet):
     """
     API endpoint for managing industries.
@@ -66,9 +71,13 @@ class IndustryViewSet(viewsets.ModelViewSet):
         return super().destroy(request, *args, **kwargs)
 
 
-# -----------------------------
-# Company Permissions
-# -----------------------------
+# ---------------------------------------------------------
+# IsEmployerOrAdmin
+# ---------------------------------------------------------
+# Custom permission for CompanyViewSet:
+# - Anyone can list/retrieve companies.
+# - Employers (role="employer") can create/update their companies.
+# - Admins can perform all actions, including delete.
 class IsEmployerOrAdmin(permissions.BasePermission):
     """
     Custom permission:
@@ -92,9 +101,14 @@ class IsEmployerOrAdmin(permissions.BasePermission):
         return False
 
 
-# -----------------------------
-# Company ViewSet
-# -----------------------------
+# ---------------------------------------------------------
+# CompanyViewSet
+# ---------------------------------------------------------
+# API endpoint for managing Company objects.
+# - Employers can create and update their companies.
+# - Admins have full access including delete.
+# - Logs all create, update, and delete operations.
+# - Requires JWT authentication and role-based permissions.
 class CompanyViewSet(viewsets.ModelViewSet):
     """
     API endpoint for managing companies.
