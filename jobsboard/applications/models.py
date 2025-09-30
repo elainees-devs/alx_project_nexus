@@ -1,6 +1,4 @@
-# jobsboard/applications/models.py
 from django.db import models
-from django.core.validators import FileExtensionValidator
 from django.core.exceptions import ValidationError
 
 
@@ -12,7 +10,6 @@ def validate_file_size(file):
 
 
 class Application(models.Model):
-    # Enum choices
     APPLICATION_STATUS_CHOICES = [
         ('pending', 'Pending'),
         ('reviewed', 'Reviewed'),
@@ -42,7 +39,7 @@ class Application(models.Model):
             models.Index(fields=['job'], name='idx_applications_job'),
             models.Index(fields=['applicant'], name='idx_applications_applicant'),
             models.Index(fields=['status'], name='idx_applications_status'),
-            models.Index(fields=['reviewed_by'], name='idx_applications_reviewed_by'),  
+            models.Index(fields=['reviewed_by'], name='idx_applications_reviewed_by'),
             models.Index(fields=['applied_at'], name='idx_applications_applied_at'),
         ]
 
@@ -57,16 +54,26 @@ class ApplicationFile(models.Model):
         ('cover_letter', 'Cover Letter'),
     ]
 
-    FILE_VALIDATORS = {
-        'resume': [FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx']), validate_file_size],
-        'cv': [FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx']), validate_file_size],
-        'cover_letter': [FileExtensionValidator(allowed_extensions=['pdf', 'doc', 'docx', 'txt']), validate_file_size],
-    }
-
     application = models.ForeignKey(Application, on_delete=models.CASCADE, related_name='files')
     file_type = models.CharField(max_length=20, choices=FILE_TYPES)
-    file_path = models.CharField(max_length=255) 
+    file = models.FileField(upload_to="application_files/", null=True, blank=True)
     uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def clean(self):
+        # Validate file size
+        if self.file:
+            validate_file_size(self.file)
+
+            # Validate extension based on file_type
+            ext = self.file.name.split('.')[-1].lower()
+            if self.file_type in ['resume', 'cv'] and ext not in ['pdf', 'doc', 'docx']:
+                raise ValidationError("Invalid file extension for resume/cv. Allowed: pdf, doc, docx")
+            if self.file_type == 'cover_letter' and ext not in ['pdf', 'doc', 'docx', 'txt']:
+                raise ValidationError("Invalid file extension for cover letter. Allowed: pdf, doc, docx, txt")
+
+    def save(self, *args, **kwargs):
+        self.full_clean()  # Run validations before saving
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"File for {self.application}"
