@@ -12,6 +12,18 @@ from .models import Payment
 from .serializers import PaymentInputSerializer, PaymentSerializer
 from .services.chapa import ChapaAPI
 
+# ---------------------------------------------------------
+# PaymentViewSet
+# ---------------------------------------------------------
+# API endpoint for managing payments.
+# - Authenticated users can view their own payments.
+# - Admins can view all payments.
+# - Provides endpoints to:
+#    - Initiate a payment via Chapa API (`initiate_payment`)
+#    - Verify a payment transaction (`verify_payment`)
+#    - Handle payment callbacks (`payments_callback`)
+# - Enforces authentication and integrates with the Payment model and serializers.
+# - Handles validation, defaults, and error handling for payment initiation.
 
 class PaymentViewSet(viewsets.ModelViewSet):
     queryset = Payment.objects.all()
