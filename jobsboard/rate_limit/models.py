@@ -3,7 +3,12 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 
-
+# ---------------------------------------------------------
+# RateLimitAction Model
+# ---------------------------------------------------------
+# Represents an action that can be rate-limited.
+# - Examples: "create_job", "send_message", "login_attempt".
+# - Ensures uniqueness per action name for consistent rate-limiting.
 class RateLimitAction(models.Model):
     """
     Defines a specific action that can be rate-limited.
@@ -14,7 +19,13 @@ class RateLimitAction(models.Model):
     def __str__(self):
         return self.name
 
-
+# ---------------------------------------------------------
+# RateLimit Model
+# ---------------------------------------------------------
+# Tracks the number of requests a user performs for a specific action within a defined time period.
+# - Each record tracks: user, action, count, period start, and period duration in seconds.
+# - Enforces uniqueness per (user, action, period_start) to prevent duplicate tracking.
+# - Indexed on user and action for efficient query performance.
 class RateLimit(models.Model):
     """
     Tracks requests per user + action within a period.
