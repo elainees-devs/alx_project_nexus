@@ -2,17 +2,6 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import action
 from rest_framework.response import Response
-from drf_yasg.utils import swagger_auto_schema
-
-from .models import Notification
-from .permissions import NotificationPermission
-from .serializers import NotificationSerializer, NotificationCreateSerializer
-
-
-# jobsboard/notifications/views.py
-from rest_framework import viewsets, status
-from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from drf_yasg.utils import swagger_auto_schema
 
@@ -20,7 +9,16 @@ from .models import Notification
 from .permissions import NotificationPermission
 from .serializers import NotificationSerializer, NotificationCreateSerializer
 
-
+# ---------------------------------------------------------
+# NotificationViewSet
+# ---------------------------------------------------------
+# API endpoint for managing user notifications.
+# - Admin: can see all notifications.
+# - Employer/Recruiter: can see notifications of job seekers in their company/companies.
+# - Job seeker: can see only their own notifications.
+# - Supports creating notifications (by recruiters), listing, and marking as read.
+# - Enforces role-based access using NotificationPermission.
+# - Integrates Swagger for API documentation.
 class NotificationViewSet(viewsets.ModelViewSet):
     """
     API endpoint for managing notifications.
