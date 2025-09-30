@@ -4,6 +4,15 @@ from django.db import transaction
 from .models import RateLimit, RateLimitAction
 from request_logs.models import RequestLog
 
+# ---------------------------------------------------------
+# RateLimit Services
+# ---------------------------------------------------------
+# Provides utility functions and exceptions for enforcing rate limits.
+# - check_rate_limit: checks and updates user action counts, raises RateLimitExceeded if limits exceeded.
+# - check_failed_login: specialized function to limit failed login attempts.
+# - RateLimitExceeded: custom exception raised when a user exceeds a rate limit.
+# - Integrates with RateLimit and RateLimitAction models.
+# - Optionally logs rate-limit hits to RequestLog for auditing.
 class RateLimitExceeded(Exception):
     """Raised when a user exceeds the allowed rate limit."""
     def __init__(self, wait_time, request=None):
