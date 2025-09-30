@@ -2,7 +2,13 @@
 from django.db import models
 from django.conf import settings
 
-
+# ---------------------------------------------------------
+# RequestLog Model
+# ---------------------------------------------------------
+# Tracks all HTTP requests made to the system.
+# - Records include user (optional), IP address, endpoint, HTTP method, status code, and timestamp.
+# - Useful for auditing, debugging, and monitoring rate-limiting or suspicious activity.
+# - Orders records by timestamp descending for recent-first queries.
 class RequestLog(models.Model):
     HTTP_METHOD_CHOICES = [
         ('GET', 'GET'),
