@@ -1,19 +1,38 @@
-# jobsboard/applications/views.py
 import logging
 from rest_framework import viewsets, permissions, status
+from django_filters import rest_framework as django_filters
+from rest_framework import filters
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
+
 from .models import Application, ApplicationFile
 from .serializers import ApplicationSerializer, ApplicationFileSerializer
 
 logger = logging.getLogger(__name__)
 
 
+# ---------------------------------------------------------
+# ApplicationViewSet
+# ---------------------------------------------------------
+# Handles job application logic:
+# - Seekers can create applications (with IP tracking).
+# - Prevents duplicate applications to the same job.
+# - Recruiters can view/update applications for their jobs.
+# - Seekers can only see their own applications.
+# - Admins can view and manage all applications.
+# Includes filtering, searching, ordering, and role-based restrictions.
 class ApplicationViewSet(viewsets.ModelViewSet):
     """ViewSet for managing job applications."""
     queryset = Application.objects.all()
     serializer_class = ApplicationSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    # Filtering, searching, ordering
+    filter_backends = [django_filters.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ["job", "status", "applicant"]
+    search_fields = ["job__title", "applicant__username"]
+    ordering_fields = ["applied_at", "status"]  
+    ordering = ["-applied_at"]
 
     def perform_create(self, serializer):
         """Attach applicant and IP address when seeker creates an application."""
@@ -26,11 +45,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
     def get_client_ip(self):
         """Get client IP from request headers safely."""
         x_forwarded_for = self.request.META.get("HTTP_X_FORWARDED_FOR")
-        if x_forwarded_for:
-            ip = x_forwarded_for.split(",")[0].strip()
-        else:
-            ip = self.request.META.get("REMOTE_ADDR")
-        return ip
+        return x_forwarded_for.split(",")[0].strip() if x_forwarded_for else self.request.META.get("REMOTE_ADDR")
 
     def get_queryset(self):
         """Limit visibility depending on user role."""
@@ -38,16 +53,14 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         user = self.request.user
 
         if getattr(user, "role", None) == "SEEKER":
-            qs = qs.filter(applicant=user)
             logger.debug(f"Seeker {user} fetching own applications")
+            return qs.filter(applicant=user)
 
         elif getattr(user, "role", None) == "RECRUITER":
-            qs = qs.filter(job__company__owner=user)
             logger.debug(f"Recruiter {user} fetching applications for owned jobs")
+            return qs.filter(job__company__owner=user)
 
-        else:
-            logger.debug(f"Admin {user} fetching all applications")
-
+        logger.debug(f"Admin {user} fetching all applications")
         return qs
 
     def create(self, request, *args, **kwargs):
@@ -71,6 +84,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         Restrict who can update applications:
         - Seekers cannot change status.
         - Recruiters can only update status or review fields.
+        - Admins can update everything.
         """
         user = request.user
         partial = kwargs.pop("partial", False)
@@ -83,7 +97,7 @@ class ApplicationViewSet(viewsets.ModelViewSet):
 
         elif getattr(user, "role", None) == "RECRUITER":
             allowed_fields = {"status", "reviewed_by", "reviewed_at"}
-            if any(field not in allowed_fields for field in request.data.keys()):
+            if not set(request.data.keys()).issubset(allowed_fields): 
                 logger.error(f"Recruiter {user} attempted unauthorized update on Application {instance.id}")
                 raise PermissionDenied("Recruiters can only update status or review fields.")
 
@@ -98,11 +112,25 @@ class ApplicationViewSet(viewsets.ModelViewSet):
         return Response(serializer.data)
 
 
+# ---------------------------------------------------------
+# ApplicationFileViewSet
+# ---------------------------------------------------------
+# Handles application file uploads and management:
+# - Seekers can upload files (e.g., CV, cover letter) for their own applications.
+# - Recruiters can view files attached to applications for their jobs.
+# - Admins can view/manage all files.
+# Includes role-based access restrictions and validation.
 class ApplicationFileViewSet(viewsets.ModelViewSet):
     """ViewSet for managing application files."""
     queryset = ApplicationFile.objects.all()
     serializer_class = ApplicationFileSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+    filter_backends = [django_filters.DjangoFilterBackend, filters.SearchFilter, filters.OrderingFilter]
+    filterset_fields = ["application", "file_type"]
+    search_fields = ["application__job__title", "application__applicant__username"]
+    ordering_fields = ["uploaded_at"]
+    ordering = ["-uploaded_at"]
 
     def get_queryset(self):
         """Limit file access depending on user role."""
