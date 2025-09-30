@@ -10,14 +10,18 @@ from PIL import Image
 
 from companies.models import Company
 
-# ----------------------------
-# Custom User Manager
-# ----------------------------
+# ---------------------------------------------------------
+# CustomUserManager
+# ---------------------------------------------------------
+# Custom manager for the User model.
+# - Handles user creation with proper role assignments.
+# - Automatically sets is_staff and is_superuser flags for admins.
+# - Ensures password hashing when creating users.
 class CustomUserManager(BaseUserManager):
     def create_user(self, username, email, password=None, **extra_fields):
         if extra_fields.get('role') == User.ROLE_ADMIN:
             extra_fields['is_staff'] = True
-        if username == 'admin':  # only developer gets full superuser
+        if username == 'admin':  # only admin gets full superuser
             extra_fields['is_superuser'] = True
         
 
@@ -32,9 +36,15 @@ class CustomUserManager(BaseUserManager):
         return self.create_user(username, email, password, **extra_fields)
 
 
-# ----------------------------
-# Custom User Model
-# ----------------------------
+# ---------------------------------------------------------
+# User Model
+# ---------------------------------------------------------
+# Custom user model extending AbstractUser.
+# - Supports three roles: Job Seeker, Employer, Admin.
+# - Associates employees with a company.
+# - Provides helper properties: is_seeker, is_recruiter, is_admin.
+# - Integrates with Django permissions and groups.
+# - Overrides __str__ to include username and role.
 class User(AbstractUser):
     ROLE_SEEKER = 'SEEKER'
     ROLE_EMPLOYER = 'EMPLOYER'
@@ -112,9 +122,14 @@ def assign_group_and_permissions(sender, instance, created, **kwargs):
             instance.groups.add(group)
 
 
-# ----------------------------
+
+# ---------------------------------------------------------
 # UserFile Model
-# ----------------------------
+# ---------------------------------------------------------
+# Represents user-uploaded files (profile image, resume, CV).
+# - Enforces file type restrictions and size validation.
+# - Ensures unique file type per user.
+# - Automatically validates and saves files with proper validators.
 def validate_file_size(value):
     max_size_mb = 5
     if value.size > max_size_mb * 1024 * 1024:
@@ -153,10 +168,14 @@ class UserFile(models.Model):
     def __str__(self):
         return f"{self.user.username} - {self.file_type}"
 
-
-# ----------------------------
+# ---------------------------------------------------------
 # Profile Model
-# ----------------------------
+# ---------------------------------------------------------
+# Stores additional user information such as bio, location, birth_date, and profile_image.
+# - Profile is automatically created upon user creation.
+# - Profile images are cropped/resized to 320x320 pixels.
+# - Linked one-to-one with the User model.
+# - Overrides __str__ to show the username's profile.
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
     bio = models.TextField(blank=True)
@@ -185,9 +204,12 @@ class Profile(models.Model):
             img.save(img_path)
 
 
-# ----------------------------
-# Signal to create Profile on User creation
-# ----------------------------
+
+# ---------------------------------------------------------
+# Signals
+# ---------------------------------------------------------
+# Assign user to the proper group and permissions on creation.
+# Automatically create or update Profile when User is created or updated.
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
 def create_or_update_user_profile(sender, instance, created, **kwargs):
     if created:
