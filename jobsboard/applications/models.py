@@ -9,6 +9,15 @@ def validate_file_size(file):
         raise ValidationError(f"File size must be under {max_size/1024/1024}MB.")
 
 
+# ---------------------------------------------------------
+# Application Model
+# ---------------------------------------------------------
+# Represents a job application submitted by a seeker.
+# - Tracks job, applicant, cover letter, and current status.
+# - Stores metadata such as IP address and timestamps.
+# - Includes reviewer details for recruiters/admins.
+# - Enforces uniqueness: an applicant can apply to a job only once.
+# - Indexed for efficient filtering/searching on key fields.
 class Application(models.Model):
     APPLICATION_STATUS_CHOICES = [
         ('pending', 'Pending'),
@@ -47,6 +56,14 @@ class Application(models.Model):
         return f"{self.applicant.username} - {self.job.title}"
 
 
+# ---------------------------------------------------------
+# ApplicationFile Model
+# ---------------------------------------------------------
+# Represents files attached to a job application.
+# - Supports multiple file types (resume, CV, cover letter).
+# - Validates file size (max 5MB) and extensions based on file type.
+# - Automatically runs validation before saving.
+# - Linked to Application with a reverse relation `files`.
 class ApplicationFile(models.Model):
     FILE_TYPES = [
         ('resume', 'Resume'),
