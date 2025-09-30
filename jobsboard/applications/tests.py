@@ -1,12 +1,15 @@
-#jobboard/applications/tests.py
+# jobsboard/applications/tests.py
 from django.test import TestCase
+from django.urls import reverse
+from rest_framework.test import APIClient
+from rest_framework import status
 from django.contrib.auth import get_user_model
-from companies.models import Company, Industry
-from jobs.models import Job
+
 from applications.models import Application, ApplicationFile
+from jobs.models import Job
+from companies.models import Company, Industry
 
 User = get_user_model()
-
 
 class ApplicationTestCase(TestCase):
     def setUp(self):
@@ -71,54 +74,73 @@ class ApplicationTestCase(TestCase):
             )
 
 
-class ApplicationFileTestCase(TestCase):
+class ApplicationFileTests(TestCase):
+    """Tests for ApplicationFile API."""
+
     def setUp(self):
-        # Create seeker user
+        self.client = APIClient()
+
+        # ✅ Add email for seeker
         self.seeker = User.objects.create_user(
-            username="fileuser",
-            email="fileuser@example.com",
-            password="testpass123",
+            username="seeker",
+            email="seeker@test.com",
+            password="pass123",
             role="SEEKER"
         )
 
-        # Create Industry and Company
-        self.industry = Industry.objects.create(name="Finance")
+        # ✅ Add email for recruiter
+        self.recruiter = User.objects.create_user(
+            username="recruiter",
+            email="recruiter@test.com",
+            password="pass123",
+            role="RECRUITER"
+        )
+
+        # ✅ Industry required for Company
+        self.industry = Industry.objects.create(name="Tech")
         self.company = Company.objects.create(
-            name="Finance Inc",
-            description="A finance company",
-            industry=self.industry,
-            owner=self.seeker 
+            name="Test Company",
+            owner=self.recruiter,
+            industry=self.industry
         )
 
-        # Create Job
-        self.job = Job.objects.create(
-            title="Data Analyst",
-            description="Analyze financial data",
-            company=self.company,
-            employment_type="part_time",
-            location="On-site",
-            salary_min=40000,
-            salary_max=80000
-        )
+        # Job
+        self.job = Job.objects.create(title="Backend Developer", company=self.company)
 
-        # Create Application
+        # Application
         self.application = Application.objects.create(
             job=self.job,
             applicant=self.seeker,
             status="pending"
         )
 
-        # Create Application File
-        self.app_file = ApplicationFile.objects.create(
-            application=self.application,
-            file_type="resume",
-            file_path="/fake/path/resume.pdf"
-        )
+        self.file_url = reverse("applicationfile-list")
 
-    def test_application_file_created(self):
+    def test_seeker_can_upload_file(self):
+        """Seeker should upload a resume to their application."""
+        self.client.force_authenticate(user=self.seeker)
+        with open("test_resume.pdf", "wb") as f:
+            f.write(b"fake content")
+
+        with open("test_resume.pdf", "rb") as f:
+            response = self.client.post(
+                self.file_url,
+                {
+                    "application": self.application.id,
+                    "file_type": "resume",
+                    "file": f,
+                },
+                format="multipart"
+            )
+
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
         self.assertEqual(ApplicationFile.objects.count(), 1)
-        self.assertEqual(self.app_file.application, self.application)
-        self.assertEqual(self.app_file.file_type, "resume")
 
-    def test_str_representation(self):
-        self.assertIn("File for", str(self.app_file))
+    def test_recruiter_cannot_upload_file(self):
+        """Recruiter should not upload files to applications."""
+        self.client.force_authenticate(user=self.recruiter)
+        response = self.client.post(
+            self.file_url,
+            {"application": self.application.id, "file_type": "resume"}
+        )
+        self.assertEqual(response.status_code, status.HTTP_403_FORBIDDEN)
